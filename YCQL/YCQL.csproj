@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9FEC7B6E-0F2E-432B-B9D0-5D006B86F45E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>YCQL</RootNamespace>
+    <AssemblyName>YCQL</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\YCQL.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\YCQL.XML</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MySql.Data">
+      <HintPath>packages\MySql.Data.6.8.3\lib\net45\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Attributes\AutoIncrementAttribute.cs" />
+    <Compile Include="Attributes\Constraints\ConstraintAttributeBase.cs" />
+    <Compile Include="Attributes\IdentityAttribute.cs" />
+    <Compile Include="DataType.cs" />
+    <Compile Include="DBColumn.cs" />
+    <Compile Include="Exceptions\DBNotSupportedException.cs" />
+    <Compile Include="Exceptions\YCQLException.cs" />
+    <Compile Include="DBHelpers\DBHelper.cs" />
+    <Compile Include="DBHelpers\MySQLHelper.cs" />
+    <Compile Include="DBHelpers\SQLServerHelper.cs" />
+    <Compile Include="DBTable.cs" />
+    <Compile Include="Exceptions\YCQLInternalException.cs" />
+    <Compile Include="Extensions\EnumExtension.cs" />
+    <Compile Include="Extensions\ITranslateSQLExtension.cs" />
+    <Compile Include="Extensions\ObjectExtension.cs" />
+    <Compile Include="Extensions\StringBuilderExtension.cs" />
+    <Compile Include="Index\SQLIndex.cs" />
+    <Compile Include="Index\SQLIndexType.cs" />
+    <Compile Include="Interfaces\IEmptiable.cs" />
+    <Compile Include="Interfaces\IJoinable.cs" />
+    <Compile Include="Interfaces\ISupportDistinct.cs" />
+    <Compile Include="Interfaces\ISupportHaving.cs" />
+    <Compile Include="Interfaces\ISupportOn.cs" />
+    <Compile Include="Interfaces\ISupportWhere.cs" />
+    <Compile Include="Operators\AllOperator.cs" />
+    <Compile Include="Operators\AnyOperator.cs" />
+    <Compile Include="Operators\OperatorEnums.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\StringResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StringResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SQLAlias.cs" />
+    <Compile Include="SQLAllColumnSymbol.cs" />
+    <Compile Include="Builders\AlterBuilder.cs" />
+    <Compile Include="Attributes\DataTypeAttribute.cs" />
+    <Compile Include="Attributes\Constraints\ForeignKeyAttribute.cs" />
+    <Compile Include="Attributes\Constraints\NotNullAttribute.cs" />
+    <Compile Include="Attributes\Constraints\PrimaryKeyAttribute.cs" />
+    <Compile Include="Attributes\SQLAttributeBase.cs" />
+    <Compile Include="Attributes\Constraints\UniqueKeyAttribute.cs" />
+    <Compile Include="Clauses\OverClause.cs" />
+    <Compile Include="Constraints\CheckConstraint.cs" />
+    <Compile Include="Constraints\SQLConstraint.cs" />
+    <Compile Include="Constraints\ForeignKeyConstraint.cs" />
+    <Compile Include="Constraints\PrimaryKeyConstraint.cs" />
+    <Compile Include="Constraints\UniqueKeyConstraint.cs" />
+    <Compile Include="Builders\CreateBuilder.cs" />
+    <Compile Include="Expressions\BooleanExpression.cs" />
+    <Compile Include="Builders\DeleteBuilder.cs" />
+    <Compile Include="Interfaces\IProduceBoolean.cs" />
+    <Compile Include="Clauses\LogicalClause.cs" />
+    <Compile Include="Interfaces\ISQLBuilder.cs" />
+    <Compile Include="Operators\ExistsOperator.cs" />
+    <Compile Include="Operators\InOperator.cs" />
+    <Compile Include="Builders\InsertBuilder.cs" />
+    <Compile Include="Expressions\JoinDefinition.cs" />
+    <Compile Include="Expressions\MathExpression.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionAbs.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionASCII.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionCeiling.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionACos.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionASin.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionATan.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionATan2.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionChar.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionCos.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionCot.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionDegrees.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionExp.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionFloor.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLeft.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLength.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLog.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLog10.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLog2.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLower.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionLTrim.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionPI.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionPower.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionRadians.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionRand.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionReplace.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionReverse.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionRight.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionRound.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionRTrim.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSign.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSin.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSoundEX.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSqrt.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSubString.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionTan.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionTrim.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionUpper.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionCharIndex.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionChoose.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateAdd.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateFromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateName.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDatePart.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateTime2FromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateTimeFromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateTimeOffsetFromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDay.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDifference.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionEOMonth.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionFormat.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionIIF.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionIsDate.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionMonth.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionNChar.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionPatIndex.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionQuoteName.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionReplicate.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSmallDateTimeFromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSpace.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionStr.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionStuff.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSwitchOffset.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionTimeFromParts.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionToDateTimeOffset.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionUnicode.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionYear.cs" />
+    <Compile Include="SQLFunctions\TimeUnitEnum.cs" />
+    <Compile Include="SQLFunctions\MySQLFunctions\MySQLFunctionDateDiff.cs" />
+    <Compile Include="SQLFunctions\MySQLFunctions\MySQLFunctionGreatest.cs" />
+    <Compile Include="SQLFunctions\MySQLFunctions\MySQLFunctionLastInsertedID.cs" />
+    <Compile Include="SQLFunctions\MySQLFunctions\MySQLFunctionLeast.cs" />
+    <Compile Include="Builders\SelectBuilder.cs" />
+    <Compile Include="SQLFunctions\SQLAggregateFunctionBase.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionBase.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionAvg.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionCoallesce.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionConcat.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionCount.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionMin.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionSum.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionCast.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionConvert.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionCurrentTimeStamp.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionDateDiff.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionGetDate.cs" />
+    <Compile Include="Interfaces\ITranslateSQL.cs" />
+    <Compile Include="SQLFunctions\SQLFunctionMax.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionGetUtcDate.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionParse.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSysDateTime.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSysDateTimeOffset.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionSysUtcDateTime.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionTryCast.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionTryConvert.cs" />
+    <Compile Include="SQLFunctions\SQLServerFunctions\SQLServerFunctionTryParse.cs" />
+    <Compile Include="Builders\UpdateBuilder.cs" />
+    <Compile Include="SQLRawText.cs" />
+    <Compile Include="SQLSourceAliasPair.cs" />
+    <Compile Include="YCQL.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\StringResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>StringResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\StringResources.zh.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
