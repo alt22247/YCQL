@@ -6,14 +6,14 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using YCQL.DBHelpers;
-using YCQL.Exceptions;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Exceptions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
-	/// A dummy version of DbParameterCollection for DebugToSQL since DbParameterCollection's constructor is protected
+	/// A dummy version of DbParameterCollection for Debug.ToSql since DbParameterCollection's constructor is protected
 	/// </summary>
 	internal class DebugParameterCollection : DbParameterCollection
 	{
@@ -141,16 +141,23 @@ namespace YCQL
 	/// <summary>
 	/// Extension class which provides convinient methods for Sql statement generation
 	/// </summary>
-	/// <seealso cref="YCQL.Interfaces.ITranslateSQL"/>
-	public static class ITranslateSQLExtension
+	/// <seealso cref="Ycql.Interfaces.ITranslateSql"/>
+	public static class ITranslateSqlExtension
 	{
-		static Dictionary<DBVersion, DBHelper> _dbEngineHelperDict;
-		static ITranslateSQLExtension()
+		/// <summary>
+		/// Transforms current object into a parameterized Sql statement using the DB Engine specified in YCQLSettings.DefaultDB
+		/// </summary>
+		/// <param name="ob">The ITranslateSQL object associated with this extension method call</param>
+		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
+		/// <exception cref="Ycql.Exceptions.YCQLException">Thrown when the YCQLSettings.DefaultDB property is not set</exception>
+		public static string ToSql(this ITranslateSql ob, DbParameterCollection parameterCollection)
 		{
-			_dbEngineHelperDict = new Dictionary<DBVersion, DBHelper>();
-			_dbEngineHelperDict.Add(DBVersion.MySQL5_6, new MySQLHelper(DBVersion.MySQL5_6));
-			_dbEngineHelperDict.Add(DBVersion.SQLServer2012, new SQLServerHelper(DBVersion.SQLServer2012));
+			if ( YcqlSettings.DefaultDb == DbVersion.Unknown )
+				throw new YCQLException("Default DB is not set. Please set the YCQLSettings.DefaultDB property before calling this method");
+
+			return ob.ToSql(YcqlSettings.DefaultDb, parameterCollection);
 		}
+
 
 		/// <summary>
 		/// Transforms the current object into parameterized Sql string for the DB Engine specified in YCQLSettings.DefaultDB and append it to the specified DbCommand. 
@@ -158,13 +165,13 @@ namespace YCQL
 		/// </summary>
 		/// <param name="ob">The ITranslateSQL object associated with this extension method call</param>
 		/// <param name="cmd">The DbCommand object to append the Sql string to</param>
-		/// <exception cref="YCQL.Exceptions.YCQLException">Thrown when the YCQLSettings.DefaultDB property is not set</exception>
-		public static void AppendToCmd(this ITranslateSQL ob, DbCommand cmd)
+		/// <exception cref="Ycql.Exceptions.YCQLException">Thrown when the YCQLSettings.DefaultDB property is not set</exception>
+		public static void AppendToCmd(this ITranslateSql ob, DbCommand cmd)
 		{
-			if (YCQLSettings.DefaultDB ==  DBVersion.Unknown)
+			if (YcqlSettings.DefaultDb ==  DbVersion.Unknown)
 				throw new YCQLException("Default DB is not set. Please set the YCQLSettings.DefaultDB property before calling this method");
 
-			cmd.CommandText += ob.ToSQL(_dbEngineHelperDict[YCQLSettings.DefaultDB], cmd.Parameters) + ";";
+			cmd.CommandText += ob.ToSql(YcqlSettings.DefaultDb, cmd.Parameters) + ";";
 		}
 
 		/// <summary>
@@ -173,9 +180,9 @@ namespace YCQL
 		/// <param name="ob">The ITranslateSQL object associated with this extension method call</param>
 		/// <param name="dBVersion">The DBMS's sql query to produce</param>
 		/// <param name="cmd">The DbCommand object to append the Sql string to</param>
-		public static void AppendToCmd(this ITranslateSQL ob, DBVersion dBVersion, DbCommand cmd)
+		public static void AppendToCmd(this ITranslateSql ob, DbVersion dBVersion, DbCommand cmd)
 		{
-			cmd.CommandText += ob.ToSQL(_dbEngineHelperDict[dBVersion], cmd.Parameters) + ";";
+			cmd.CommandText += ob.ToSql(dBVersion, cmd.Parameters) + ";";
 		}
 
 		/// <summary>
@@ -184,10 +191,10 @@ namespace YCQL
 		/// <param name="ob">The ITranslateSQL object associated with this extension method call</param>
 		/// <param name="dBVersion">The DBMS's sql query to produce</param>
 		/// <returns>A NONE parameterized SQL string</returns>
-		public static string DebugToSQL(this ITranslateSQL ob, DBVersion dBVersion)
+		public static string DebugToSql(this ITranslateSql ob, DbVersion dBVersion)
 		{
 			DbParameterCollection parameterCollection = new DebugParameterCollection();
-			string commandText = ob.ToSQL(_dbEngineHelperDict[dBVersion], parameterCollection);
+			string commandText = ob.ToSql(dBVersion, parameterCollection);
 			foreach (DbParameter parameter in parameterCollection)
 				commandText = commandText.Replace(parameter.ParameterName, parameter.Value.ToString());
 

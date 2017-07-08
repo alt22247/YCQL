@@ -3,11 +3,11 @@
  * All rights reserved
 */
 
-using YCQL.Exceptions;
-using YCQL;
+using Ycql.Exceptions;
+using Ycql;
 using System;
 
-namespace YCQL.Extensions
+namespace Ycql.Extensions
 {
 	/// <summary>
 	/// Internal extension class which contains methods to convert enums into Sql string if they can't be directly converted using .ToString()
@@ -18,9 +18,9 @@ namespace YCQL.Extensions
 		/// Converts ComparisonOperator enum into Sql string
 		/// </summary>
 		/// <param name="op">ComparisonOperator enum to be converted</param>
-		/// <exception cref="YCQL.Exceptions.YCQLInternalException">Thrown when the specified enum is missing in switch statement</exception>
+		/// <exception cref="Ycql.Exceptions.YCQLInternalException">Thrown when the specified enum is missing in switch statement</exception>
 		/// <returns>Parameterized Sql string</returns>
-		internal static string ToSQL(this ComparisonOperator op)
+		internal static string ToSql(this ComparisonOperator op)
 		{
 			switch (op)
 			{
@@ -41,7 +41,7 @@ namespace YCQL.Extensions
 				case ComparisonOperator.Is:
 					return "IS";
 				default:
-					throw new YCQLInternalException(string.Format("Unknown operator {0}", op.ToSQL()));
+					throw new YCQLInternalException(string.Format("Unknown operator {0}", op.ToSql()));
 			}
 		}
 
@@ -49,9 +49,9 @@ namespace YCQL.Extensions
 		/// Converts MathOperator enum into Sql string
 		/// </summary>
 		/// <param name="op">MathOperator enum to be converted</param>
-		/// <exception cref="YCQL.Exceptions.YCQLInternalException">Thrown when the specified enum is missing in switch statement</exception>
+		/// <exception cref="Ycql.Exceptions.YCQLInternalException">Thrown when the specified enum is missing in switch statement</exception>
 		/// <returns>Parameterized Sql string</returns>
-		internal static string ToSQL(this MathOperator op)
+		internal static string ToSql(this MathOperator op)
 		{
 			switch (op)
 			{
@@ -64,7 +64,7 @@ namespace YCQL.Extensions
 				case MathOperator.Divide:
 					return "/";
 				default:
-					throw new YCQLInternalException(string.Format("Unknown operator {0}", op.ToSQL()));
+					throw new YCQLInternalException(string.Format("Unknown operator {0}", op.ToSql()));
 			}
 		}
 	}

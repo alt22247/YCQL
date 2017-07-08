@@ -3,17 +3,17 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents DateTimeFromParts function in Sql Server which returns a datetime value for the specified date and time
 	/// </summary>
-	public class SQLServerFunctionDateTimeFromParts : SQLFunctionBase
+	public class SqlServerFunctionDateTimeFromParts : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionDateTimeFromParts class using specified attributes
+		/// Initializes a new instance of the SqlServerFunctionDateTimeFromParts class using specified attributes
 		/// </summary>
 		/// <param name="year">An specifying a year</param>
 		/// <param name="month">An integer specifying a month</param>
@@ -22,13 +22,13 @@ namespace YCQL.SQLServerFunctions
 		/// <param name="minute">An integer specifying minutes</param>
 		/// <param name="seconds">An integer specifying seconds</param>
 		/// <param name="milliseconds">An integer specifying milliseconds</param>
-		public SQLServerFunctionDateTimeFromParts(int year, int month, int day, int hour, int minute, int seconds, int milliseconds)
+		public SqlServerFunctionDateTimeFromParts(int year, int month, int day, int hour, int minute, int seconds, int milliseconds)
 			: this((object) year, (object) month, (object) day, (object) hour, (object) minute, (object) seconds, (object) milliseconds)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionDateTimeFromParts class using specified attributes
+		/// Initializes a new instance of the SqlServerFunctionDateTimeFromParts class using specified attributes
 		/// </summary>
 		/// <param name="year">An integer expression specifying a year</param>
 		/// <param name="month">An integer expression specifying a month</param>
@@ -37,7 +37,7 @@ namespace YCQL.SQLServerFunctions
 		/// <param name="minute">An integer expression specifying minutes</param>
 		/// <param name="seconds">An integer expression  specifying seconds</param>
 		/// <param name="milliseconds">An integer expression specifying milliseconds</param>
-		public SQLServerFunctionDateTimeFromParts(object year, object month, object day, object hour,
+		public SqlServerFunctionDateTimeFromParts(object year, object month, object day, object hour,
 			object minute, object seconds, object milliseconds)
 			: base("DATETIMEFROMPARTS", year, month, day, hour, minute, seconds, milliseconds)
 		{

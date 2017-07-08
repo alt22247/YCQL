@@ -3,12 +3,12 @@
  * All rights reserved
 */
 
-namespace YCQL.Interfaces
+namespace Ycql.Interfaces
 {
 	/// <summary>
 	/// Marker interface for all Sql builders for now
 	/// </summary>
-	internal interface ISQLBuilder : ITranslateSQL
+	internal interface ISqlBuilder : ITranslateSql
 	{
 	}
 }

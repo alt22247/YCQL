@@ -3,23 +3,25 @@
  * All rights reserved
 */
 
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents the In operator in Sql
 	/// </summary>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	public class InOperator : IProduceBoolean<InOperator>, ITranslateSQL
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	public class InOperator : IProduceBoolean<InOperator>, ITranslateSql
 	{
 		object _lhsExpression;
-		object[] _inExpressions;
+		IEnumerable<object> _inExpressions;
 		bool _not;
 
 		/// <summary>
@@ -31,7 +33,8 @@ namespace YCQL
 		{
 			_not = false;
 			_lhsExpression = lhsExpression;
-			_inExpressions = inExpressions;
+			if (inExpressions != null)
+				_inExpressions = inExpressions.Unwrap();
 		}
 
 		/// <summary>
@@ -47,19 +50,21 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("(");
-			sb.Append(dbHelper.TranslateObjectToSQLString(_lhsExpression, parameterCollection));
+			sb.Append(dbHelper.TranslateObjectToSqlString(_lhsExpression, parameterCollection));
 
 			if (_not)
 				sb.Append(" NOT ");
 
-			sb.AppendFormat(" IN ({0}))", dbHelper.TranslateObjectsToSQLString(_inExpressions, parameterCollection));
+			sb.AppendFormat(" IN ({0}))", dbHelper.TranslateObjectsToSqlString(_inExpressions, parameterCollection));
 			return sb.ToString();
 		}
 	}

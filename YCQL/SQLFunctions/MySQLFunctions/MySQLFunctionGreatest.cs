@@ -3,20 +3,21 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using System.Collections.Generic;
+using Ycql.SqlFunctions;
 
-namespace YCQL.MySQLFunctions
+namespace Ycql.MySqlFunctions
 {
 	/// <summary>
 	/// Represents Greatest function in MySql which returns the largest (maximum-valued) argument
 	/// </summary>
-	public class MySQLFunctionGreatest : SQLFunctionBase
+	public class MySqlFunctionGreatest : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the MySQLFunctionGreatest class using specified arguments. There must be at least two arguments
+		/// Initializes a new instance of the MySqlFunctionGreatest class using specified arguments. There must be at least two arguments
 		/// </summary>
 		/// <param name="args">Arguments to be compared</param>
-		public MySQLFunctionGreatest(params object[] args)
+		public MySqlFunctionGreatest(params object[] args)
 			: base("GREATEST", args)
 		{
 		}

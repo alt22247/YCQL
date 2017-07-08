@@ -4,10 +4,10 @@
 */
 
 using System.Text;
-using YCQL.Exceptions;
-using YCQL.Resources;
+using Ycql.Exceptions;
+using Ycql.Resources;
 
-namespace YCQL.Extensions
+namespace Ycql.Extensions
 {
 	/// <summary>
 	/// 

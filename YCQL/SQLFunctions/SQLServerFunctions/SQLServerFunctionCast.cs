@@ -4,34 +4,34 @@
 */
 
 using System.Data.Common;
-using YCQL.DBHelpers;
-using YCQL.SQLFunctions;
+using Ycql.DbHelpers;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents Cast function in Sql Server which converts an expression of one data type to another
 	/// </summary>
-	public class SQLServerFunctionCast : SQLFunctionBase
+	public class SqlServerFunctionCast : SqlFunctionBase
 	{
 		object _expression;
 		DataType _dataType;
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionCast class using specified column and data type to be casted to
+		/// Initializes a new instance of the SqlServerFunctionCast class using specified column and data type to be casted to
 		/// </summary>
 		/// <param name="column">Column to have its type casted</param>
 		/// <param name="dataType">Data type to be casted to</param>
-		public SQLServerFunctionCast(DBColumn column, DataType dataType)
+		public SqlServerFunctionCast(DbColumn column, DataType dataType)
 			: this((object) column, dataType)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionCast class using specified expression and type to cast to
+		/// Initializes a new instance of the SqlServerFunctionCast class using specified expression and type to cast to
 		/// </summary>
 		/// <param name="expression">Expression to have its type casted</param>
 		/// <param name="dataType">Data type to be casted to</param>
-		public SQLServerFunctionCast(object expression, DataType dataType)
+		public SqlServerFunctionCast(object expression, DataType dataType)
 			: base("CAST")
 		{
 			_expression = expression;
@@ -41,12 +41,14 @@ namespace YCQL.SQLServerFunctions
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public override string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public override string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
-			return string.Format("CAST({0} AS {1})", dbHelper.TranslateObjectToSQLString(_expression, parameterCollection), _dataType.ToSQL(dbHelper, parameterCollection));
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
+			return string.Format("CAST({0} AS {1})", dbHelper.TranslateObjectToSqlString(_expression, parameterCollection), _dataType.ToSql(dbVersion, parameterCollection));
 		}
 	}
 }

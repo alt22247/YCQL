@@ -3,16 +3,16 @@
  * All rights reserved
 */
 
-namespace YCQL.Attributes
+namespace Ycql.Attributes
 {
 	/// <summary>
 	/// Indicates that a column is a primary key
 	/// </summary>
-	/// <seealso cref="YCQL.Constraints.PrimaryKeyConstraint"/>
-	/// <seealso cref="YCQL.Attributes.ForeignKeyAttribute"/>
-	/// <seealso cref="YCQL.Attributes.NotNullAttribute"/>
-	/// <seealso cref="YCQL.Attributes.UniqueKeyAttribute"/>
-	/// <seealso cref="YCQL.DBColumn"/>
+	/// <seealso cref="Ycql.Constraints.PrimaryKeyConstraint"/>
+	/// <seealso cref="Ycql.Attributes.ForeignKeyAttribute"/>
+	/// <seealso cref="Ycql.Attributes.NotNullAttribute"/>
+	/// <seealso cref="Ycql.Attributes.UniqueKeyAttribute"/>
+	/// <seealso cref="Ycql.DbColumn"/>
 	public class PrimaryKeyAttribute : ConstraintAttributeBase
 	{
 		/// <summary>

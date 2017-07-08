@@ -5,19 +5,19 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents the all operator in Sql. Something like A >= ALL (SELECT B FROM C)
 	/// </summary>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
-	public class AllOperator : IProduceBoolean<AllOperator>, ITranslateSQL
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
+	public class AllOperator : IProduceBoolean<AllOperator>, ITranslateSql
 	{
 		object _expression;
 		ComparisonOperator _op;
@@ -30,7 +30,7 @@ namespace YCQL
 		/// <param name="column">The column which will be on the left hand side of this operator</param>
 		/// <param name="op">A comparison operator</param>
 		/// <param name="subQuery">A subquery that returns a result set of one column</param>
-		public AllOperator(DBColumn column, ComparisonOperator op, SelectBuilder subQuery)
+		public AllOperator(DbColumn column, ComparisonOperator op, SelectBuilder subQuery)
 			: this((object) column, op, subQuery)
 		{
 		}
@@ -61,18 +61,20 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("(");
 			if (_not)
 				sb.Append(" NOT ");
 
-			sb.AppendFormat("{0} {1} ALL ({2})", dbHelper.TranslateObjectToSQLString(_expression, parameterCollection),
-														_op.ToSQL(), _subQuery.ToSQL(dbHelper, parameterCollection));
+			sb.AppendFormat("{0} {1} ALL ({2})", dbHelper.TranslateObjectToSqlString(_expression, parameterCollection),
+														_op.ToSql(), _subQuery.ToSql(dbVersion, parameterCollection));
 
 			sb.Append(")");
 			return sb.ToString();

@@ -3,29 +3,29 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents Month function in Sql Server which returns an integer that represents the month of the specified date
 	/// </summary>
-	public class SQLServerFunctionMonth : SQLFunctionBase
+	public class SqlServerFunctionMonth : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionMonth class using specified column
+		/// Initializes a new instance of the SqlServerFunctionMonth class using specified column
 		/// </summary>
 		/// <param name="column">A column that is time, date, smalldatetime, datetime, datetime2, or datetimeoffset</param>
-		public SQLServerFunctionMonth(DBColumn column)
+		public SqlServerFunctionMonth(DbColumn column)
 			: this((object) column)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionMonth class using specified date expression
+		/// Initializes a new instance of the SqlServerFunctionMonth class using specified date expression
 		/// </summary>
 		/// <param name="dateExpression">An expression that can be resolved to a time, date, smalldatetime, datetime, datetime2, or datetimeoffset value</param>
-		public SQLServerFunctionMonth(object dateExpression)
+		public SqlServerFunctionMonth(object dateExpression)
 			: base("MONTH", dateExpression)
 		{
 		}

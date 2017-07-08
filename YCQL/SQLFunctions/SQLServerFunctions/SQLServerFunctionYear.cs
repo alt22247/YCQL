@@ -3,29 +3,29 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents Unicode function in Sql Server which returns an integer that represents the year of the specified date
 	/// </summary>
-	public class SQLServerFunctionYear : SQLFunctionBase
+	public class SqlServerFunctionYear : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionYear class using specified column
+		/// Initializes a new instance of the SqlServerFunctionYear class using specified column
 		/// </summary>
 		/// <param name="column">A time, date, smalldatetime, datetime, datetime2, or datetimeoffset column</param>
-		public SQLServerFunctionYear(DBColumn column)
+		public SqlServerFunctionYear(DbColumn column)
 			: this((object) column)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionYear class using specified date expression
+		/// Initializes a new instance of the SqlServerFunctionYear class using specified date expression
 		/// </summary>
 		/// <param name="date">An expression that can be resolved to a time, date, smalldatetime, datetime, datetime2, or datetimeoffset value.</param>
-		public SQLServerFunctionYear(object date)
+		public SqlServerFunctionYear(object date)
 			: base("YEAR", date)
 		{
 		}

@@ -3,28 +3,46 @@
  * All rights reserved
 */
 
+#if YCQL_SQLSERVER
 using System;
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using Ycql.Interfaces;
 
-namespace YCQL.DBHelpers
+namespace Ycql.DbHelpers
 {
+#pragma warning disable 1574
 	/// <summary>
 	/// Represents the helper class for Sql Server during Sql translation
 	/// </summary>
-	/// <seealso cref="YCQL.Interfaces.ITranslateSQL"/>
-	/// <seealso cref="YCQL.DBHelpers.MySQLHelper"/>
-	public class SQLServerHelper : DBHelper
+	/// <seealso cref="Ycql.Interfaces.ITranslateSql"/>
+	/// <seealso cref="Ycql.DbHelpers.MySqlHelper"/>
+#pragma warning restore 1574
+	internal class SqlServerHelper : DbHelper
 	{
 		SqlCommandBuilder _commandBuilder = new SqlCommandBuilder();
 		/// <summary>
 		/// Initializes a new instance of the SQLServerHelper class using specified DBVersion
 		/// </summary>
-		/// <param name="version">Version of the Sql Server query which ToSQL should output</param>
-		public SQLServerHelper(DBVersion version)
-			: base(DBEngine.SQLServer, version)
+		/// <param name="version">Version of the Sql Server query which .ToSql should output</param>
+		internal SqlServerHelper(DbVersion version)
+			: base(DbEngine.SqlServer, version)
 		{
 			_commandBuilder = new SqlCommandBuilder();
+		}
+
+		protected override DbParameter CreateDbParameter(string name, object value, object dbType)
+		{
+			SqlParameter parameter = new SqlParameter(name, value);
+			if (dbType is SqlDbType)
+				parameter.SqlDbType = (SqlDbType) dbType;
+			return parameter;
+		}
+
+		protected override object GetParameterCustomDbType(ICustomDbType customDbType)
+		{
+			return customDbType.SqlDbType;
 		}
 
 		/// <summary>
@@ -32,23 +50,10 @@ namespace YCQL.DBHelpers
 		/// </summary>
 		/// <param name="unquotedIdentifier">The original unquoted identifier</param>
 		/// <returns>A string escaped by corresponding DB's connector</returns>
-		public override string QuoteIdentifier(string unquotedIdentifier)
+		internal override string QuoteIdentifier(string unquotedIdentifier)
 		{
 			return _commandBuilder.QuoteIdentifier(unquotedIdentifier);
 		}
-
-		/// <summary>
-		/// Adds the specified value into parameterCollection with appropiate name. DBNull will be added if value is null
-		/// </summary>
-		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
-		/// <param name="value">The value to be added into parameterCollection</param>
-		/// <returns>Name of the new added parameter</returns>
-		protected override string InsertDBParameter(DbParameterCollection parameterCollection, object value)
-		{
-			string name = ParameterNamePrefix + parameterCollection.Count;
-			SqlParameter parameter = new SqlParameter(name, value ?? DBNull.Value);
-			parameterCollection.Add(parameter);
-			return name;
-		}
 	}
 }
+#endif

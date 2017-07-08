@@ -3,19 +3,19 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents CurrentTimeStamp function(variable) in Sql Server which returns the current database system timestamp as a datetime value without the database time zone offset
 	/// </summary>
-	public class SQLServerFunctionCurrentTimeStamp : SQLFunctionBase
+	public class SqlServerFunctionCurrentTimeStamp : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionCurrentTimeStamp class
+		/// Initializes a new instance of the SqlServerFunctionCurrentTimeStamp class
 		/// </summary>
-		public SQLServerFunctionCurrentTimeStamp()
+		public SqlServerFunctionCurrentTimeStamp()
 			: base("CURRENT_TIMESTAMP", false)
 		{
 		}

@@ -5,9 +5,9 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
+using Ycql.DbHelpers;
 
-namespace YCQL.Constraints
+namespace Ycql.Constraints
 {
 	/// <summary>
 	/// An enum of possible actions for ON DELETE and ON UPDATE in a foreign key constraint
@@ -39,18 +39,18 @@ namespace YCQL.Constraints
 	/// <summary>
 	/// Represents the Foreign Key constraint in SQL
 	/// </summary>
-	/// <seealso cref="YCQL.Attributes.ForeignKeyAttribute"/>
-	/// <seealso cref="YCQL.Constraints.CheckConstraint"/>
-	/// <seealso cref="YCQL.Constraints.PrimaryKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.UniqueKeyConstraint"/>
-	public class ForeignKeyConstraint : SQLConstraint
+	/// <seealso cref="Ycql.Attributes.ForeignKeyAttribute"/>
+	/// <seealso cref="Ycql.Constraints.CheckConstraint"/>
+	/// <seealso cref="Ycql.Constraints.PrimaryKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.UniqueKeyConstraint"/>
+	public class ForeignKeyConstraint : SqlConstraint
 	{
 		/// <summary>
 		/// Initializes a new instance of the ForeignKeyConstraint class using specified source column and referenced column
 		/// </summary>
 		/// <param name="column">The source column of this foreign key constraint</param>
 		/// <param name="refColumn">The referenced column of this foreign key constraint</param>
-		public ForeignKeyConstraint(DBColumn column, DBColumn refColumn)
+		public ForeignKeyConstraint(DbColumn column, DbColumn refColumn)
 			: this(null, column, refColumn)
 		{
 		}
@@ -61,7 +61,7 @@ namespace YCQL.Constraints
 		/// <param name="name">The name for this foreign key constraint</param>
 		/// <param name="column">The source column of this foreign key constraint</param>
 		/// <param name="refColumn">The referenced column of this foreign key constraint</param>
-		public ForeignKeyConstraint(string name, DBColumn column, DBColumn refColumn)
+		public ForeignKeyConstraint(string name, DbColumn column, DbColumn refColumn)
 			: base(name)
 		{
 			Column = column;
@@ -71,11 +71,11 @@ namespace YCQL.Constraints
 		/// <summary>
 		/// Gets or sets the source column of this foreign key constraint
 		/// </summary>
-		public DBColumn Column { get; set; }
+		public DbColumn Column { get; set; }
 		/// <summary>
 		/// Gets or sets the referenced column of this foreign key constraint
 		/// </summary>
-		public DBColumn RefColumn { get; set; }
+		public DbColumn RefColumn { get; set; }
 
 		/// <summary>
 		/// Gets or sets the action for ON DELETE expression. Set this to null to if ON DELETE action is not specified (default is null)
@@ -89,17 +89,19 @@ namespace YCQL.Constraints
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public override string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public override string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			if (!string.IsNullOrEmpty(Name))
 				sb.AppendFormat("CONSTRAINT {0} ", dbHelper.QuoteIdentifier(Name));
 
-			sb.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1}({2})", dbHelper.QuoteIdentifier(Column.Name),
-				dbHelper.QuoteIdentifier(RefColumn.ParentTable.Name), dbHelper.QuoteIdentifier(RefColumn.Name));
+			sb.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1}({2})", dbHelper.QuoteIdentifier(Column.ColumnName),
+				dbHelper.QuoteIdentifier(RefColumn.ParentTable.TableName), dbHelper.QuoteIdentifier(RefColumn.ColumnName));
 
 			if (OnDelete != OnDeleteUpdateAction.Unspecified)
 			{

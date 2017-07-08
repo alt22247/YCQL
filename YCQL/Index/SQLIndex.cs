@@ -4,16 +4,17 @@
 */
 
 using System.Collections.Generic;
+using Ycql.Extensions;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents a single or composite index in Sql
 	/// </summary>
-	/// <seealso cref="YCQL.SQLIndexType"/>
-	/// <seealso cref="YCQL.CreateBuilder"/>
-	/// <seealso cref="YCQL.AlterBuilder"/>
-	public class SQLIndex
+	/// <seealso cref="Ycql.SqlIndexType"/>
+	/// <seealso cref="Ycql.CreateBuilder"/>
+	/// <seealso cref="Ycql.AlterBuilder"/>
+	public class SqlIndex
 	{
 		/// <summary>
 		/// Initializes a new instance of the SQLIndex class using specified index name, table and columns
@@ -21,8 +22,8 @@ namespace YCQL
 		/// <param name="name">Name of this index</param>
 		/// <param name="table">The table associated with this index</param>
 		/// <param name="columns">One single column if it is a single index or multiple columns if it is a composite index</param>
-		public SQLIndex(string name, DBTable table, params DBColumn[] columns)
-			: this(name, SQLIndexType.NONCLUSTERED, table, columns)
+		public SqlIndex(string name, DbTable table, params DbColumn[] columns)
+			: this(name, SqlIndexType.NONCLUSTERED, table, columns)
 		{
 		}
 
@@ -33,13 +34,12 @@ namespace YCQL
 		/// <param name="indexType">Type of this index</param>
 		/// <param name="table">The table associated with this index</param>
 		/// <param name="columns">One single column if it is a single index or multiple columns if it is a composite index</param>
-		public SQLIndex(string name, SQLIndexType indexType, DBTable table, params DBColumn[] columns)
+		public SqlIndex(string name, SqlIndexType indexType, DbTable table, params DbColumn[] columns)
 		{
 			Name = name;
 			IndexType = indexType;
 			Table = table;
-			Columns = new List<DBColumn>();
-			Columns.AddRange(columns);
+			Columns = columns.Unwrap<DbColumn>();
 		}
 
 		/// <summary>
@@ -49,15 +49,15 @@ namespace YCQL
 		/// <summary>
 		/// Gets or sets the type of this index
 		/// </summary>
-		public SQLIndexType IndexType { get; set; }
+		public SqlIndexType IndexType { get; set; }
 		/// <summary>
 		/// Gets or sets the table associated with this index
 		/// </summary>
-		public DBTable Table { get; set; }
+		public DbTable Table { get; set; }
 		/// <summary>
 		/// Gets or sets the list of columns associated with this index
 		/// </summary>
-		public List<DBColumn> Columns { get; set; }
+		public List<DbColumn> Columns { get; set; }
 		/// <summary>
 		/// Gets or sets whether or not this index is an unique index
 		/// </summary>

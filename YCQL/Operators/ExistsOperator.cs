@@ -5,19 +5,19 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql;
+using Ycql.DbHelpers;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents the Exists operator in Sql
 	/// </summary>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
-	public class ExistsOperator : IProduceBoolean<ExistsOperator>, ITranslateSQL
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
+	public class ExistsOperator : IProduceBoolean<ExistsOperator>, ITranslateSql
 	{
 		SelectBuilder _subQuery;
 		bool _not;
@@ -45,17 +45,19 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("(");
 			if (_not)
 				sb.Append(" NOT ");
 
-			sb.AppendFormat(" EXISTS ({0}))", _subQuery.ToSQL(dbHelper, parameterCollection));
+			sb.AppendFormat(" EXISTS ({0}))", _subQuery.ToSql(dbVersion, parameterCollection));
 
 			return sb.ToString();
 		}

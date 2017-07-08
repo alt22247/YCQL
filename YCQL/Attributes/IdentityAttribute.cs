@@ -2,15 +2,15 @@
  * Copyright © 2015 by YuXiang Chen 
  * All rights reserved
 */
-
-namespace YCQL.Attributes
+#if YCQL_SQLSERVER
+namespace Ycql.Attributes
 {
 	/// <summary>
 	/// Indicates that a column is an identity column (for Sql Server)
 	/// </summary>
-	/// <seealso cref="YCQL.Identity"/>
-	/// <seealso cref="YCQL.DBColumn.Identity"/>
-	public class IdentityAttribute : SQLAttributeBase
+	/// <seealso cref="Ycql.Identity"/>
+	/// <seealso cref="Ycql.DbColumn.Identity"/>
+	public class IdentityAttribute : SqlAttributeBase
 	{
 		/// <summary>
 		/// Gets the seed of the identity property
@@ -40,3 +40,4 @@ namespace YCQL.Attributes
 		}
 	}
 }
+#endif

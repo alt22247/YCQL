@@ -5,23 +5,23 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
-using YCQL;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
+using Ycql;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents an expression which will produce boolean result
 	/// </summary>
-	/// <seealso cref="YCQL.ComparisonOperator"/>
-	/// <seealso cref="YCQL.MathExpression"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
-	public class BooleanExpression : IProduceBoolean<BooleanExpression>, ITranslateSQL
+	/// <seealso cref="Ycql.ComparisonOperator"/>
+	/// <seealso cref="Ycql.MathExpression"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
+	public class BooleanExpression : IProduceBoolean<BooleanExpression>, ITranslateSql
 	{
 		object _lhs;
 		object _rhs;
@@ -34,7 +34,7 @@ namespace YCQL
 		/// <param name="leftHandSide">Column which would act as left hand side expression</param>
 		/// <param name="op">comparison operator</param>
 		/// <param name="rightHandSide">Right hand side expression</param>
-		public BooleanExpression(DBColumn leftHandSide, ComparisonOperator op, object rightHandSide)
+		public BooleanExpression(DbColumn leftHandSide, ComparisonOperator op, object rightHandSide)
 			: this((object) leftHandSide, op, rightHandSide)
 		{
 		}
@@ -45,7 +45,7 @@ namespace YCQL
 		/// <param name="leftHandSide">Left hand side expression</param>
 		/// <param name="op">comparison operator</param>
 		/// <param name="rightHandSide">Column which would act as right hand side expression</param>
-		public BooleanExpression(object leftHandSide, ComparisonOperator op, DBColumn rightHandSide)
+		public BooleanExpression(object leftHandSide, ComparisonOperator op, DbColumn rightHandSide)
 			: this(leftHandSide, op, (object) rightHandSide)
 		{
 		}
@@ -56,7 +56,7 @@ namespace YCQL
 		/// <param name="leftHandSide">Column which would act as left hand side expression</param>
 		/// <param name="op">comparison operator</param>
 		/// <param name="rightHandSide">Column which would act as right hand side expression</param>
-		public BooleanExpression(DBColumn leftHandSide, ComparisonOperator op, DBColumn rightHandSide)
+		public BooleanExpression(DbColumn leftHandSide, ComparisonOperator op, DbColumn rightHandSide)
 			: this((object) leftHandSide, op, (object) rightHandSide)
 		{
 		}
@@ -88,18 +88,24 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("(");
 			if (_isNot)
 				sb.Append(" NOT ");
 
-			sb.AppendFormat("{0} {1} {2}", dbHelper.TranslateObjectToSQLString(_lhs, parameterCollection), _op.ToSQL(),
-									dbHelper.TranslateObjectToSQLString(_rhs, parameterCollection));
+			sb.AppendFormat("{0} {1} ", dbHelper.TranslateObjectToSqlString(_lhs, parameterCollection), _op.ToSql());
+			if (_op == ComparisonOperator.Is && _rhs == null)
+				sb.Append("NULL");
+			else
+				sb.Append(dbHelper.TranslateObjectToSqlString(_rhs, parameterCollection));
+
 			sb.Append(")");
 
 			return sb.ToString();

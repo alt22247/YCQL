@@ -3,13 +3,14 @@
  * All rights reserved
 */
 
-namespace YCQL.Attributes
+#if YCQL_MYSQL
+namespace Ycql.Attributes
 {
 	/// <summary>
 	/// Indicates that a column is an auto increment column (for MySql)
 	/// </summary>
-	/// <seealso cref="YCQL.DBColumn.IsAutoIncrement"/>
-	public class AutoIncrementAttribute : SQLAttributeBase
+	/// <seealso cref="Ycql.DbColumn.IsAutoIncrement"/>
+	public class AutoIncrementAttribute : SqlAttributeBase
 	{
 		/// <summary>
 		/// Initializes a new instance of the AutoIncrementAttribute class
@@ -19,3 +20,4 @@ namespace YCQL.Attributes
 		}
 	}
 }
+#endif

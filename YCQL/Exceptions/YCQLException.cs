@@ -5,7 +5,7 @@
 
 using System;
 
-namespace YCQL.Exceptions
+namespace Ycql.Exceptions
 {
 	/// <summary>
 	/// Base class for all YCQL related exceptions

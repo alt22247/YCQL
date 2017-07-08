@@ -3,12 +3,12 @@
  * All rights reserved
 */
 
-namespace YCQL.Exceptions
+namespace Ycql.Exceptions
 {
 	/// <summary>
 	/// The exception that is thrown when YCQL encounters some internal errors and it cannot proceed. Usually thrown when an enum entry is missing in a switch statement
 	/// </summary>
-	/// <seealso cref="YCQL.Exceptions.YCQLException"/>
+	/// <seealso cref="Ycql.Exceptions.YCQLException"/>
 	public class YCQLInternalException : YCQLException
 	{
 		/// <summary>

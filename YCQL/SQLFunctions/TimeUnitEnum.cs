@@ -3,7 +3,7 @@
  * All rights reserved
 */
 
-namespace YCQL.SQLFunctions
+namespace Ycql.SqlFunctions
 {
 	/// <summary>
 	/// Enum list of all supported time unites for all supported DBMS

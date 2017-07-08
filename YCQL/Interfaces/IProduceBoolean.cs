@@ -3,7 +3,7 @@
  * All rights reserved
 */
 
-namespace YCQL.Interfaces
+namespace Ycql.Interfaces
 {
 	/// <summary>
 	/// Exposes a Not method to negate the resulting boolean

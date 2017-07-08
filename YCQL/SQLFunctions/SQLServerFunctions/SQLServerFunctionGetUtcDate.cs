@@ -3,19 +3,19 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents GetUtcDate function in Sql Server which returns the current database system timestamp as a datetime value
 	/// </summary>
-	public class SQLServerFunctionGetUtcDate : SQLFunctionBase
+	public class SqlServerFunctionGetUtcDate : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionGetUtcDate class
+		/// Initializes a new instance of the SqlServerFunctionGetUtcDate class
 		/// </summary>
-		public SQLServerFunctionGetUtcDate()
+		public SqlServerFunctionGetUtcDate()
 			: base("GETUTCDATE")
 		{
 		}

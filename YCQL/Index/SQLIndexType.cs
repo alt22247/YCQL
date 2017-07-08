@@ -3,13 +3,13 @@
  * All rights reserved
 */
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Enum list of all supported index types for all supported DBMS
 	/// </summary>
-	/// <seealso cref="YCQL.SQLIndex"/>
-	public enum SQLIndexType
+	/// <seealso cref="Ycql.SqlIndex"/>
+	public enum SqlIndexType
 	{
 		/// <summary>
 		/// Represents a NonClustered index in Sql

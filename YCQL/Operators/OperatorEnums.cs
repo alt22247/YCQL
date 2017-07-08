@@ -3,17 +3,17 @@
  * All rights reserved
 */
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Enum list of all supported comparison operators
 	/// </summary>
-	/// <seealso cref="YCQL.LogicalClause"/>
-	/// <seealso cref="YCQL.BooleanExpression"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
+	/// <seealso cref="Ycql.LogicalClause"/>
+	/// <seealso cref="Ycql.BooleanExpression"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
 	public enum ComparisonOperator
 	{
 		/// <summary>
@@ -54,7 +54,7 @@ namespace YCQL
 	/// <summary>
 	/// Enum list of all supported math operators
 	/// </summary>
-	/// <seealso cref="YCQL.MathExpression"/>
+	/// <seealso cref="Ycql.MathExpression"/>
 	public enum MathOperator
 	{
 		/// <summary>

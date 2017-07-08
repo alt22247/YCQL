@@ -3,29 +3,29 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents Space function in Sql Server which returns a string of repeated spaces
 	/// </summary>
-	public class SQLServerFunctionSpace : SQLFunctionBase
+	public class SqlServerFunctionSpace : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionSpace class using specified number of spaces
+		/// Initializes a new instance of the SqlServerFunctionSpace class using specified number of spaces
 		/// </summary>
 		/// <param name="spaces">A positive integer that indicates the number of spaces</param>
-		public SQLServerFunctionSpace(int spaces)
+		public SqlServerFunctionSpace(int spaces)
 			: this((object) spaces)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionSpace class using specified number of spaces
+		/// Initializes a new instance of the SqlServerFunctionSpace class using specified number of spaces
 		/// </summary>
 		/// <param name="spaces">A positive integer that indicates the number of spaces</param>
-		public SQLServerFunctionSpace(object spaces)
+		public SqlServerFunctionSpace(object spaces)
 			: base("SPACE", spaces)
 		{
 		}

@@ -3,16 +3,16 @@
  * All rights reserved
 */
 
-namespace YCQL.Attributes
+namespace Ycql.Attributes
 {
 	/// <summary>
 	/// Indicates that a column is a unique key
 	/// </summary>
-	/// <seealso cref="YCQL.Constraints.UniqueKeyConstraint"/>
-	/// <seealso cref="YCQL.Attributes.ForeignKeyAttribute"/>
-	/// <seealso cref="YCQL.Attributes.NotNullAttribute"/>
-	/// <seealso cref="YCQL.Attributes.PrimaryKeyAttribute"/>
-	/// <seealso cref="YCQL.DBColumn"/>
+	/// <seealso cref="Ycql.Constraints.UniqueKeyConstraint"/>
+	/// <seealso cref="Ycql.Attributes.ForeignKeyAttribute"/>
+	/// <seealso cref="Ycql.Attributes.NotNullAttribute"/>
+	/// <seealso cref="Ycql.Attributes.PrimaryKeyAttribute"/>
+	/// <seealso cref="Ycql.DbColumn"/>
 	public class UniqueKeyAttribute : ConstraintAttributeBase
 	{
 		/// <summary>

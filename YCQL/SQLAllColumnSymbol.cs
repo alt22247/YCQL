@@ -4,18 +4,18 @@
 */
 
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents the * character (all column) in Sql string
 	/// </summary>
-	/// <seealso cref="YCQL.SQLRawText"/>
-	public class SQLAllColumnSymbol : SQLRawText
+	/// <seealso cref="Ycql.SqlRawText"/>
+	public class SqlAllColumnSymbol : SqlRawText
 	{
 		/// <summary>
 		/// Initializes a new instance of the SQLAllColumnSymbol class
 		/// </summary>
-		public SQLAllColumnSymbol()
+		public SqlAllColumnSymbol()
 			: base("*")
 		{
 		}

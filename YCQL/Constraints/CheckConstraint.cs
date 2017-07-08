@@ -5,17 +5,17 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
+using Ycql.DbHelpers;
 
-namespace YCQL.Constraints
+namespace Ycql.Constraints
 {
 	/// <summary>
 	/// Represents the Check constraint in SQL
 	/// </summary>
-	/// <seealso cref="YCQL.Constraints.ForeignKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.PrimaryKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.UniqueKeyConstraint"/>
-	public class CheckConstraint : SQLConstraint
+	/// <seealso cref="Ycql.Constraints.ForeignKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.PrimaryKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.UniqueKeyConstraint"/>
+	public class CheckConstraint : SqlConstraint
 	{
 		/// <summary>
 		/// The constraint expression
@@ -82,16 +82,18 @@ namespace YCQL.Constraints
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public override string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public override string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			if (!string.IsNullOrEmpty(Name))
 				sb.AppendFormat("CONSTRAINT {0} ", dbHelper.QuoteIdentifier(Name));
 
-			sb.AppendFormat("CHECK {0}", dbHelper.TranslateObjectToSQLString(_expression, parameterCollection));
+			sb.AppendFormat("CHECK {0}", dbHelper.TranslateObjectToSqlString(_expression, parameterCollection));
 
 			return sb.ToString();
 		}

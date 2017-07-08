@@ -3,20 +3,20 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents SysDateTimeOffset function in Sql Server which returns a datetimeoffset(7) value that contains the date and time of the computer on which the instance of SQL Server is running. 
 	/// The time zone offset is included
 	/// </summary>
-	public class SQLServerFunctionSysDateTimeOffset : SQLFunctionBase
+	public class SqlServerFunctionSysDateTimeOffset : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionSysDateTimeOffset class
+		/// Initializes a new instance of the SqlServerFunctionSysDateTimeOffset class
 		/// </summary>
-		public SQLServerFunctionSysDateTimeOffset()
+		public SqlServerFunctionSysDateTimeOffset()
 			: base("SYSDATETIMEOFFSET")
 		{
 		}

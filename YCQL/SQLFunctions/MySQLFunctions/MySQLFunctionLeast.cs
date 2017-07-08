@@ -3,20 +3,21 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using System.Collections.Generic;
+using Ycql.SqlFunctions;
 
-namespace YCQL.MySQLFunctions
+namespace Ycql.MySqlFunctions
 {
 	/// <summary>
 	/// Represents Greatest function in MySql which returns the smallest (minimum-valued) argument
 	/// </summary>
-	public class MySQLFunctionLeast : SQLFunctionBase
+	public class MySqlFunctionLeast : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the MySQLFunctionLeast class using specified arguments. There must be at least two arguments
+		/// Initializes a new instance of the MySqlFunctionLeast class using specified arguments. There must be at least two arguments
 		/// </summary>
 		/// <param name="args">Arguments to be compared</param>
-		public MySQLFunctionLeast(params object[] args)
+		public MySqlFunctionLeast(params object[] args)
 			: base("LEAST", args)
 		{
 		}

@@ -7,32 +7,32 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Reflection;
-using YCQL.Attributes;
-using YCQL.Constraints;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql.Attributes;
+using Ycql.Constraints;
+using Ycql.DbHelpers;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents a table in Database.
 	/// </summary>
-	/// <seealso cref="YCQL.DBColumn"/>
-	public class DBTable : ITranslateSQL
+	/// <seealso cref="Ycql.DbColumn"/>
+	public class DbTable : ITranslateSql
 	{
 		/// <summary>
 		/// Gets the name of this table
 		/// </summary>
-		public readonly string Name;
+		public readonly string TableName;
 		/// <summary>
 		/// Gets the list of constraints associated with this table
 		/// </summary>
-		public readonly List<SQLConstraint> Constraints;
-		Dictionary<string, DBColumn> _nameColumnDict;
+		public readonly List<SqlConstraint> Constraints;
+		Dictionary<string, DbColumn> _nameColumnDict;
 		/// <summary>
 		/// Initializes a new instance of the DBTable class
 		/// </summary>
-		public DBTable()
+		public DbTable()
 			: this(null)
 		{
 		}
@@ -40,12 +40,12 @@ namespace YCQL
 		/// <summary>
 		/// Initializes a new instance of the DBTable class using specified table name
 		/// </summary>
-		/// <param name="name">Name of the table</param>
-		public DBTable(string name)
+		/// <param name="tableName">Name of the table</param>
+		public DbTable(string tableName)
 		{
-			Name = string.IsNullOrEmpty(name) ? GetType().Name : name;
-			_nameColumnDict = new Dictionary<string, DBColumn>();
-			Constraints = new List<SQLConstraint>();
+			TableName = string.IsNullOrEmpty(tableName) ? GetType().Name : tableName;
+			_nameColumnDict = new Dictionary<string, DbColumn>();
+			Constraints = new List<SqlConstraint>();
 			InitializeColumns();
 		}
 
@@ -55,7 +55,7 @@ namespace YCQL
 		/// <param name="columnName">The name of the column</param>
 		/// <exception cref="System.ArgumentNullException">Thrown when columnName is null</exception>
 		/// <exception cref="System.Collections.Generic.KeyNotFoundException">Thrown when there is no column in this table with that name</exception>
-		public DBColumn this[string columnName]
+		public DbColumn this[string columnName]
 		{
 			get
 			{
@@ -70,7 +70,7 @@ namespace YCQL
 		/// <summary>
 		/// Gets the array of columns in this table
 		/// </summary>
-		public DBColumn[] ColumnArray
+		public DbColumn[] ColumnArray
 		{
 			get
 			{
@@ -83,30 +83,37 @@ namespace YCQL
 		/// </summary>
 		/// <param name="name">Name of the column</param>
 		/// <param name="attributes">Attributes associated with the colulmn</param>
-		DBColumn GenerateDBColumn(string name, SQLAttributeBase[] attributes)
+		DbColumn GenerateDbColumn(string name, SqlAttributeBase[] attributes)
 		{
-			DBColumn column = new DBColumn(this, name);
-			_nameColumnDict[name] = column;
+			DbColumn column = new DbColumn(this, name);
 
-			foreach (SQLAttributeBase attribute in attributes)
+			foreach (SqlAttributeBase attribute in attributes)
 			{
 				if (attribute is DataTypeAttribute)
 				{
 					DataTypeAttribute dataTypeAttribute = (DataTypeAttribute) attribute;
 					column.DataType = new DataType(dataTypeAttribute.DataType, dataTypeAttribute.Arguments);
 				}
+#if YCQL_MYSQL
 				else if (attribute is AutoIncrementAttribute)
 				{
 					column.IsAutoIncrement = true;
 				}
+#endif
+#if YCQL_SQLSERVER
 				else if (attribute is IdentityAttribute)
 				{
 					IdentityAttribute identityAttribute = (IdentityAttribute) attribute;
 					column.Identity = new Identity(identityAttribute.Seed, identityAttribute.Increment);
 				}
+#endif
 				else if (attribute is NotNullAttribute)
 				{
 					column.IsNotNull = true;
+				}
+				else if (attribute is DefaultAttribute)
+				{
+					column.DefaultValue = ((DefaultAttribute) attribute).DefaultValue;
 				}
 				else if (attribute is ForeignKeyAttribute)
 				{
@@ -138,18 +145,24 @@ namespace YCQL
 				if (memberInfo.MemberType == MemberTypes.Property)
 				{
 					PropertyInfo info = (PropertyInfo) memberInfo;
-					if (info.PropertyType != typeof(DBColumn) || info.GetIndexParameters().Length > 0)
+					if (info.PropertyType != typeof(DbColumn) || info.GetIndexParameters().Length > 0)
 						continue;
 
-					info.SetValue(this, GenerateDBColumn(info.Name, (SQLAttributeBase[]) info.GetCustomAttributes(typeof(SQLAttributeBase), true)));
+					if (info.GetCustomAttribute(typeof(SkipInitAttribute), true) != null)
+						continue;
+
+					info.SetValue(this, GenerateDbColumn(info.Name, (SqlAttributeBase[]) info.GetCustomAttributes(typeof(SqlAttributeBase), true)));
 				}
 				else if (memberInfo.MemberType == MemberTypes.Field)
 				{
 					FieldInfo info = (FieldInfo) memberInfo;
-					if (info.FieldType != typeof(DBColumn))
+					if (info.FieldType != typeof(DbColumn))
 						continue;
 
-					info.SetValue(this, GenerateDBColumn(info.Name, (SQLAttributeBase[]) info.GetCustomAttributes(typeof(SQLAttributeBase), true)));
+					if (info.GetCustomAttribute(typeof(SkipInitAttribute), true) != null)
+						continue;
+
+					info.SetValue(this, GenerateDbColumn(info.Name, (SqlAttributeBase[]) info.GetCustomAttributes(typeof(SqlAttributeBase), true)));
 				}
 			}
 		}
@@ -157,12 +170,14 @@ namespace YCQL
 		/// <summary>
 		/// Returns an Sql escaped table name
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">Not used</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
-			return dbHelper.QuoteIdentifier(Name);
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
+			return dbHelper.QuoteIdentifier(TableName);
 		}
 	}
 }

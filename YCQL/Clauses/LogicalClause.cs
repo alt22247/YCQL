@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	enum LogicalConnective
 	{
@@ -22,17 +22,13 @@ namespace YCQL
 	/// <summary>
 	/// Represents one or more expressions joined by logical connectives
 	/// </summary>
-	/// <seealso cref="YCQL.BooleanExpression"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
-	public class LogicalClause : ITranslateSQL, IEmptiable, IProduceBoolean<LogicalClause>
+	/// <seealso cref="Ycql.BooleanExpression"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
+	public class LogicalClause : ITranslateSql, IEmptiable, IProduceBoolean<LogicalClause>
 	{
-		/// <summary>
-		/// The initial element of the clause
-		/// </summary>
-		object _initialElement;
 		/// <summary>
 		/// List of expressions and the connective associated with them
 		/// </summary>
@@ -43,7 +39,7 @@ namespace YCQL
 		bool _isNot;
 
 		/// <summary>
-		/// Initializes a new instance of the LogicalClause class
+		/// Initializes a new instance of the LogicalClause class. Initial element will be the first element added using either AND or OR.
 		/// </summary>
 		public LogicalClause()
 			: this((object) null)
@@ -110,8 +106,9 @@ namespace YCQL
 		/// <param name="initialElement">The initial element of this clause</param>
 		public LogicalClause(object initialElement)
 		{
-			_initialElement = initialElement;
 			_expressions = new List<Tuple<LogicalConnective, object>>();
+			if (initialElement != null)
+				_expressions.Add(new Tuple<LogicalConnective, object>(LogicalConnective.AND, initialElement));
 		}
 
 		/// <summary>
@@ -122,10 +119,7 @@ namespace YCQL
 		/// <returns>A reference to this instance after the new element has been added</returns>
 		LogicalClause AddElement(LogicalConnective connective, object element)
 		{
-			if (_initialElement == null)
-				_initialElement = element;
-			else
-				_expressions.Add(new Tuple<LogicalConnective, object>(connective, element));
+			_expressions.Add(new Tuple<LogicalConnective, object>(connective, element));
 
 			return this;
 		}
@@ -166,9 +160,6 @@ namespace YCQL
 		/// <returns>A boolean indicating if the expression is empty or not</returns>
 		public bool HasContent()
 		{
-			if (_expressions.Count == 0)
-				return false;
-
 			foreach (object element in _expressions)
 			{
 				if (!element.IsNullOrEmpty())
@@ -181,24 +172,34 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			if (_isNot)
 				sb.Append("NOT");
 
 			sb.Append("(");
-			sb.Append(dbHelper.TranslateObjectToSQLString(_initialElement, parameterCollection));
 
+			bool initialElementOutputted = false;
 			foreach (Tuple<LogicalConnective, object> expression in _expressions)
 			{
 				if (expression.Item2.IsNullOrEmpty())
 					continue;
 
-				sb.AppendFormat(" {0} {1}", expression.Item1, dbHelper.TranslateObjectToSQLString(expression.Item2, parameterCollection));
+				if (!initialElementOutputted)
+				{
+					sb.Append(dbHelper.TranslateObjectToSqlString(expression.Item2, parameterCollection));
+					initialElementOutputted = true;
+				}
+				else
+				{
+					sb.AppendFormat(" {0} {1}", expression.Item1, dbHelper.TranslateObjectToSqlString(expression.Item2, parameterCollection));
+				}
 			}
 
 			sb.Append(" )");

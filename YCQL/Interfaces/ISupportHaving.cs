@@ -3,7 +3,7 @@
  * All rights reserved
 */
 
-namespace YCQL.Interfaces
+namespace Ycql.Interfaces
 {
 	internal interface ISupportHaving<T>
 	{

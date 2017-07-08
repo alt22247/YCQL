@@ -3,20 +3,23 @@
  * All rights reserved
 */
 
-namespace YCQL.Attributes
+using System.Collections.Generic;
+using Ycql.Extensions;
+
+namespace Ycql.Attributes
 {
 	/// <summary>
 	/// Indicates the data type of a column
 	/// </summary>
-	/// <seealso cref="YCQL.DBColumn.DataType"/>
-	/// <seealso cref="YCQL.DataType"/>
-	/// <seealso cref="YCQL.DataTypeEnum"/>
-	public class DataTypeAttribute : SQLAttributeBase
+	/// <seealso cref="Ycql.DbColumn.DataType"/>
+	/// <seealso cref="Ycql.DataType"/>
+	/// <seealso cref="Ycql.DataTypeEnum"/>
+	public class DataTypeAttribute : SqlAttributeBase
 	{
 		/// <summary>
 		/// Gets the argument array of the data type
 		/// </summary>
-		internal readonly object[] Arguments;
+		internal readonly IEnumerable<object> Arguments;
 		/// <summary>
 		/// Gets the data type enum
 		/// </summary>
@@ -30,7 +33,8 @@ namespace YCQL.Attributes
 		public DataTypeAttribute(DataTypeEnum dataTypeEnum, params object[] args)
 		{
 			DataType = dataTypeEnum;
-			Arguments = args;
+			if (args != null)
+				Arguments = args.Unwrap();
 		}
 	}
 }

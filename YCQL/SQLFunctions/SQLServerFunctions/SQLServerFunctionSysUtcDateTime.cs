@@ -3,20 +3,20 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.SQLServerFunctions
+namespace Ycql.SqlServerFunctions
 {
 	/// <summary>
 	/// Represents SysUtcDateTime function in Sql Server which returns a datetime2 value that contains the date and time of the computer on which the instance of SQL Server is running. 
 	/// The date and time is returned as UTC time (Coordinated Universal Time).
 	/// </summary>
-	public class SQLServerFunctionSysUtcDateTime : SQLFunctionBase
+	public class SqlServerFunctionSysUtcDateTime : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the SQLServerFunctionSysUtcDateTime class
+		/// Initializes a new instance of the SqlServerFunctionSysUtcDateTime class
 		/// </summary>
-		public SQLServerFunctionSysUtcDateTime()
+		public SqlServerFunctionSysUtcDateTime()
 			: base("SYSUTCDATETIME")
 		{
 		}

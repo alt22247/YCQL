@@ -8,42 +8,42 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
-using YCQL.Constraints;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
+using Ycql.Constraints;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents a Sql builder for creating table and index
 	/// </summary>
-	/// <seealso cref="YCQL.AlterBuilder"/>
-	/// <seealso cref="YCQL.DeleteBuilder"/>
-	/// <seealso cref="YCQL.InsertBuilder"/>
-	/// <seealso cref="YCQL.SelectBuilder"/>
-	/// <seealso cref="YCQL.UpdateBuilder"/>
-	/// <seealso cref="YCQL.DBTable"/>
-	/// <seealso cref="YCQL.DBColumn"/>
-	/// <seealso cref="YCQL.SQLIndex"/>
-	public class CreateBuilder : ISQLBuilder
+	/// <seealso cref="Ycql.AlterBuilder"/>
+	/// <seealso cref="Ycql.DeleteBuilder"/>
+	/// <seealso cref="Ycql.InsertBuilder"/>
+	/// <seealso cref="Ycql.SelectBuilder"/>
+	/// <seealso cref="Ycql.UpdateBuilder"/>
+	/// <seealso cref="Ycql.DbTable"/>
+	/// <seealso cref="Ycql.DbColumn"/>
+	/// <seealso cref="Ycql.SqlIndex"/>
+	public class CreateBuilder : ISqlBuilder
 	{
 		/// <summary>
 		/// List of tables to be created
 		/// </summary>
-		List<DBTable> _tables;
+		List<DbTable> _tables;
 		/// <summary>
 		/// List of indexes to be created
 		/// </summary>
-		List<SQLIndex> _indexes;
+		List<SqlIndex> _indexes;
 
 		/// <summary>
 		/// Initializes a new instance of the CreateBuilder class
 		/// </summary>
 		public CreateBuilder()
 		{
-			_tables = new List<DBTable>();
-			_indexes = new List<SQLIndex>();
+			_tables = new List<DbTable>();
+			_indexes = new List<SqlIndex>();
 		}
 
 		/// <summary>
@@ -51,9 +51,9 @@ namespace YCQL
 		/// </summary>
 		/// <param name="tables">Tables to be created</param>
 		/// <returns>A reference to this instance after the tables has been added to the table to create list</returns>
-		public CreateBuilder CreateTable(params DBTable[] tables)
+		public CreateBuilder CreateTable(params DbTable[] tables)
 		{
-			_tables.AddRange(tables);
+			_tables.AddRange(tables.Unwrap<DbTable>());
 			return this;
 		}
 
@@ -62,51 +62,59 @@ namespace YCQL
 		/// </summary>
 		/// <param name="indexes">Indexes to be created</param>
 		/// <returns>A reference to this instance after the indexes has been added to the index to create list</returns>
-		public CreateBuilder CreateIndex(params SQLIndex[] indexes)
+		public CreateBuilder CreateIndex(params SqlIndex[] indexes)
 		{
-			_indexes.AddRange(indexes);
+			_indexes.AddRange(indexes.Unwrap<SqlIndex>());
 			return this;
 		}
 
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			List<string> statements = new List<string>();
-			foreach (DBTable table in _tables)
+			foreach (DbTable table in _tables)
 			{
 				StringBuilder sb = new StringBuilder();
-				sb.AppendFormat("CREATE TABLE {0}", dbHelper.QuoteIdentifier(table.Name));
+				sb.AppendFormat("CREATE TABLE {0}", dbHelper.QuoteIdentifier(table.TableName));
 				sb.AppendLine("(");
 
 				List<string> columnDefStrings = new List<string>();
-				foreach (DBColumn column in table.ColumnArray)
+				foreach (DbColumn column in table.ColumnArray)
 				{
 					StringBuilder columnDefSB = new StringBuilder();
 					columnDefSB.Tab();
-					columnDefSB.AppendFormat(" {0} {1} ", dbHelper.QuoteIdentifier(column.Name), column.DataType.ToSQL(dbHelper, parameterCollection));
+					columnDefSB.AppendFormat(" {0} {1} ", dbHelper.QuoteIdentifier(column.ColumnName), column.DataType.ToSql(dbVersion, parameterCollection));
 					if (column.IsNotNull)
-						columnDefSB.Append("NOT NULL");
+						columnDefSB.Append("NOT NULL ");
 
-					if (dbHelper.DBEngine == DBEngine.MySQL && column.IsAutoIncrement)
+					if (column.DefaultValue != null)
+						columnDefSB.AppendFormat("DEFAULT {0} ", dbHelper.TranslateObjectToSqlString(column.DefaultValue, parameterCollection));
+#if YCQL_MYSQL
+					if (dbHelper.DbEngine == DbEngine.MySql && column.IsAutoIncrement)
 						columnDefSB.Append("AUTO_INCREMENT");
+#endif
 
-					if (dbHelper.DBEngine == DBEngine.SQLServer && column.Identity != null)
-						columnDefSB.Append(column.Identity.ToSQL(dbHelper, parameterCollection));
+#if YCQL_SQLSERVER
+					if (dbHelper.DbEngine == DbEngine.SqlServer && column.Identity != null)
+						columnDefSB.Append(column.Identity.ToSql(dbVersion, parameterCollection));
+#endif
 
 					columnDefStrings.Add(columnDefSB.ToString());
 				}
 
 				List<string> constraintDefStrings = new List<string>();
-				foreach (SQLConstraint constraint in table.Constraints)
+				foreach (SqlConstraint constraint in table.Constraints)
 				{
 					StringBuilder constraintDefSB = new StringBuilder();
 					constraintDefSB.Tab();
-					constraintDefSB.Append(constraint.ToSQL(dbHelper, parameterCollection));
+					constraintDefSB.Append(constraint.ToSql(dbVersion, parameterCollection));
 
 					constraintDefStrings.Add(constraintDefSB.ToString());
 				}
@@ -124,24 +132,28 @@ namespace YCQL
 				statements.Add(sb.ToString());
 			}
 
-			foreach (SQLIndex index in _indexes)
+			foreach (SqlIndex index in _indexes)
 			{
 				StringBuilder sb = new StringBuilder();
 				sb.Append("CREATE");
 				if (index.IsUnique)
 					sb.Append(" UNIQUE");
 
-				if (dbHelper.DBEngine == DBEngine.SQLServer && index.IndexType == SQLIndexType.CLUSTERED)
+#if YCQL_SQLSERVER
+				if (dbHelper.DbEngine == DbEngine.SqlServer && index.IndexType == SqlIndexType.CLUSTERED)
 					sb.Append(" CLUSTERED");
+#endif
 
 				sb.AppendFormat(" INDEX {0}", index.Name);
 				sb.AppendLine();
-				sb.AppendFormat("ON {0} ({1})", dbHelper.QuoteIdentifier(index.Table.Name),
-					string.Join(",", index.Columns.Select(x => x.ToSQL(dbHelper, parameterCollection))));
+				sb.AppendFormat("ON {0} ({1})", dbHelper.QuoteIdentifier(index.Table.TableName),
+					string.Join(",", index.Columns.Select(x => x.ToSql(dbVersion, parameterCollection))));
 
-				if (dbHelper.DBEngine == DBEngine.MySQL &&
-					index.IndexType == SQLIndexType.BTREE || index.IndexType == SQLIndexType.HASH)
+#if YCQL_MYSQL
+				if (dbHelper.DbEngine == DbEngine.MySql &&
+					index.IndexType == SqlIndexType.BTREE || index.IndexType == SqlIndexType.HASH)
 					sb.AppendFormat(" USING {0}", index.IndexType.ToString());
+#endif
 
 				statements.Add(sb.ToString());
 			}

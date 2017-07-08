@@ -3,59 +3,69 @@
  * All rights reserved
 */
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Enum list of all supported DBMS
 	/// </summary>
-	/// <seealso cref="YCQL.DBVersion"/>
-	public enum DBEngine
+	/// <seealso cref="Ycql.DbVersion"/>
+	public enum DbEngine
 	{
+#if YCQL_SQLSERVER
 		/// <summary>
-		/// Represents Microsoft SQL Server DBMS
+		/// Represents Microsoft Sql Server DBMS
 		/// </summary>
-		SQLServer,
+		SqlServer,
+#endif
+
+#if YCQL_MYSQL
 		/// <summary>
 		/// Represents MySql DBMS
 		/// </summary>
-		MySQL
+		MySql
+#endif
 	}
 
 	//Version should be in increasing order, so that we can do something like DBVersion > DBVersion.SQLServer2012
 	/// <summary>
 	/// Enum list of all supported versions of all supported DBMS
 	/// </summary>
-	/// <seealso cref="YCQL.DBEngine"/>
-	public enum DBVersion
+	/// <seealso cref="Ycql.DbEngine"/>
+	public enum DbVersion
 	{
 		/// <summary>
 		/// Unknown DBVersion. Usually acts as null
 		/// </summary>
 		Unknown,
+#if YCQL_SQLSERVER
 		/// <summary>
 		/// Microsoft SQL Server 2012
 		/// </summary>
-		SQLServer2012,
+		SqlServer2012,
+#endif
+
+#if YCQL_MYSQL
 		/// <summary>
 		/// MySql 5.6
 		/// </summary>
-		MySQL5_6,
+		MySql5_6,
+#endif
 	}
 
 	/// <summary>
 	/// The class which holds all the global settings for YCQL
 	/// </summary>
-	public static class YCQLSettings
+	public static class YcqlSettings
 	{
-		static YCQLSettings()
+		static YcqlSettings()
 		{
-			DefaultDB = DBVersion.Unknown;
+			DefaultDb = DbVersion.Unknown;
 		}
 
 		/// <summary>
 		/// Gets or sets the default DBEngine to use when calling AppendToCmd(DbCommand)
 		/// </summary>
-		/// <seealso cref="YCQL.ITranslateSQLExtension.AppendToCmd(YCQL.Interfaces.ITranslateSQL, System.Data.Common.DbCommand)"/>
-		public static DBVersion DefaultDB { get; set; }
+		/// <seealso cref="Ycql.ITranslateSqlExtension.AppendToCmd(Ycql.Interfaces.ITranslateSql, System.Data.Common.DbCommand)"/>
+		public static DbVersion DefaultDb { get; set; }
 	}
 }

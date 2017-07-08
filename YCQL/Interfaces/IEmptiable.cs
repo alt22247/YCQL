@@ -3,7 +3,7 @@
  * All rights reserved
 */
 
-namespace YCQL.Interfaces
+namespace Ycql.Interfaces
 {
 	/// <summary>
 	/// An internal interface which indicates the class could be empty (nothing to output during Sql translation)

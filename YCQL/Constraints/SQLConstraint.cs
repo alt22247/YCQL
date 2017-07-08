@@ -4,10 +4,10 @@
 */
 
 using System.Data.Common;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Interfaces;
 
-namespace YCQL.Constraints
+namespace Ycql.Constraints
 {
 	/// <summary>
 	/// Enum list of all supported SQL constraint types for all supported DBMS
@@ -35,18 +35,18 @@ namespace YCQL.Constraints
 	/// <summary>
 	/// Base class for SQL constraints
 	/// </summary>
-	/// <seealso cref="YCQL.Constraints.CheckConstraint"/>
-	/// <seealso cref="YCQL.Constraints.ForeignKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.PrimaryKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.UniqueKeyConstraint"/>
-	public abstract class SQLConstraint : ITranslateSQL
+	/// <seealso cref="Ycql.Constraints.CheckConstraint"/>
+	/// <seealso cref="Ycql.Constraints.ForeignKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.PrimaryKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.UniqueKeyConstraint"/>
+	public abstract class SqlConstraint : ITranslateSql
 	{
 		//Dont need a zero param constructor since all class inheriting would have an overload to call this anyways
 		/// <summary>
 		/// Initializes a new instance of the named SQLConstraint class
 		/// </summary>
 		/// <param name="name">The name the constraint</param>
-		protected SQLConstraint(string name)
+		protected SqlConstraint(string name)
 		{
 			Name = name;
 		}
@@ -59,9 +59,9 @@ namespace YCQL.Constraints
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public abstract string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection);
+		public abstract string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection);
 	}
 }

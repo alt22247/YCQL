@@ -3,14 +3,17 @@
  * All rights reserved
 */
 
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Hints;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Enum list of supported orders
@@ -34,17 +37,17 @@ namespace YCQL
 	/// <summary>
 	/// Represents a Sql builder for select queries
 	/// </summary>
-	/// <seealso cref="YCQL.CreateBuilder"/>
-	/// <seealso cref="YCQL.DeleteBuilder"/>
-	/// <seealso cref="YCQL.InsertBuilder"/>
-	/// <seealso cref="YCQL.AlterBuilder"/>
-	/// <seealso cref="YCQL.UpdateBuilder"/>
-	/// <seealso cref="YCQL.DBTable"/>
-	/// <seealso cref="YCQL.DBColumn"/>
-	/// <seealso cref="YCQL.JoinDefinition"/>
-	/// <seealso cref="YCQL.Order"/>
-	/// <seealso cref="YCQL.SQLAlias"/>
-	public class SelectBuilder : ISQLBuilder, ISupportDistinct<SelectBuilder>, IJoinable<SelectBuilder>, ISupportWhere<SelectBuilder>, ISupportHaving<SelectBuilder>
+	/// <seealso cref="Ycql.CreateBuilder"/>
+	/// <seealso cref="Ycql.DeleteBuilder"/>
+	/// <seealso cref="Ycql.InsertBuilder"/>
+	/// <seealso cref="Ycql.AlterBuilder"/>
+	/// <seealso cref="Ycql.UpdateBuilder"/>
+	/// <seealso cref="Ycql.DbTable"/>
+	/// <seealso cref="Ycql.DbColumn"/>
+	/// <seealso cref="Ycql.JoinDefinition"/>
+	/// <seealso cref="Ycql.Order"/>
+	/// <seealso cref="Ycql.SqlAlias"/>
+	public class SelectBuilder : ISqlBuilder, ISupportDistinct<SelectBuilder>, IJoinable<SelectBuilder>, ISupportWhere<SelectBuilder>, ISupportHaving<SelectBuilder>
 	{
 		/// <summary>
 		/// List of column expressions
@@ -55,6 +58,10 @@ namespace YCQL
 		/// </summary>
 		List<object> _orderByExpressions;
 		/// <summary>
+		/// List index and order for order by expressions
+		/// </summary>
+		Dictionary<int, Order> _indexOrderDict;
+		/// <summary>
 		/// List of group by expressions
 		/// </summary>
 		List<object> _groupByExpressions;
@@ -62,6 +69,10 @@ namespace YCQL
 		/// List of join definitions
 		/// </summary>
 		List<JoinDefinition> _joinDefinitions;
+		/// <summary>
+		/// List of unions
+		/// </summary>
+		List<Tuple<bool, SelectBuilder>> _unions;
 		/// <summary>
 		/// List of tables to select from
 		/// </summary>
@@ -74,10 +85,25 @@ namespace YCQL
 		/// The having clause for the query
 		/// </summary>
 		object _havingClause;
+#if YCQL_SQLSERVER
 		/// <summary>
 		/// The select top value for the query (for Sql Server)
 		/// </summary>
 		long _topRows;
+		/// <summary>
+		/// The number of rows to offset (for Sql Server)
+		/// </summary>
+		object _offsetNumRows;
+		/// <summary>
+		/// The number of rows to fetch after the offset (for Sql Server)
+		/// </summary>
+		object _fetchNextNumRows;
+		/// <summary>
+		/// List of table expression index and list of Sql Server table hints
+		/// </summary>
+		Dictionary<int, SqlServerTableHint[]> _indexSSHintDict;
+#endif
+#if YCQL_MYSQL
 		/// <summary>
 		/// The limit start value for limit operator (for MySql)
 		/// </summary>
@@ -86,10 +112,7 @@ namespace YCQL
 		/// The row count value for this limit operator (for MySql)
 		/// </summary>
 		long _limitRowCount;
-		/// <summary>
-		/// The order which the result should be in
-		/// </summary>
-		Order _order;
+#endif
 		/// <summary>
 		/// Flag to indicate if Select Distinct should be used
 		/// </summary>
@@ -103,15 +126,19 @@ namespace YCQL
 			_fromTableExpressions = new List<object>();
 			_columnExpressions = new List<object>();
 			_orderByExpressions = new List<object>();
+			_indexOrderDict = new Dictionary<int, Order>();
 			_groupByExpressions = new List<object>();
 			_joinDefinitions = new List<JoinDefinition>();
+			_unions = new List<Tuple<bool, SelectBuilder>>();
 			_isDistinct = false;
-
+#if YCQL_SQLSERVER
 			_topRows = -1;
+			_indexSSHintDict = new Dictionary<int, SqlServerTableHint[]>();
+#endif
+#if YCQL_MYSQL
 			_limitStart = -1;
 			_limitRowCount = -1;
-
-			_order = YCQL.Order.Unspecified;
+#endif
 		}
 
 		/// <summary>
@@ -121,7 +148,7 @@ namespace YCQL
 		public SelectBuilder SelectAll()
 		{
 			_columnExpressions.Clear();
-			_columnExpressions.Add(new SQLAllColumnSymbol());
+			_columnExpressions.Add(new SqlAllColumnSymbol());
 			return this;
 		}
 
@@ -132,52 +159,10 @@ namespace YCQL
 		/// <returns>A reference to this instance after the expressions has been added to the to select list</returns>
 		public SelectBuilder Select(params object[] expressions)
 		{
-			_columnExpressions.AddRange(expressions);
-			return this;
-		}
+			if (expressions == null)
+				return this;
 
-		/// <summary>
-		/// Adds an aliased column into the select list
-		/// </summary>
-		/// <param name="column">Column to be selected</param>
-		/// <param name="aliasName">Alias name for the column</param>
-		/// <returns>A reference to this instance after the expressions has been added to the to select list</returns>
-		public SelectBuilder SelectWithAlias(DBColumn column, string aliasName)
-		{
-			return SelectWithAlias(column, aliasName);
-		}
-
-		/// <summary>
-		/// Adds an aliased expression into the select list
-		/// </summary>
-		/// <param name="expression">Expression to be selected</param>
-		/// <param name="aliasName">Alias name for the column</param>
-		/// <returns>A reference to this instance after the expressions has been added to the to select list</returns>
-		public SelectBuilder SelectWithAlias(object expression, string aliasName)
-		{
-			return SelectWithAlias(expression, new SQLAlias(aliasName));
-		}
-
-		/// <summary>
-		/// Adds an aliased column into the select list
-		/// </summary>
-		/// <param name="column">Column to be selected</param>
-		/// <param name="alias">Alias for the column</param>
-		/// <returns>A reference to this instance after the expressions has been added to the to select list</returns>
-		public SelectBuilder SelectWithAlias(DBColumn column, SQLAlias alias)
-		{
-			return SelectWithAlias(column, alias);
-		}
-
-		/// <summary>
-		/// Adds an aliased expression into the select list
-		/// </summary>
-		/// <param name="expression">Expression to be selected</param>
-		/// <param name="alias">Alias for the column</param>
-		/// <returns>A reference to this instance after the expressions has been added to the to select list</returns>
-		public SelectBuilder SelectWithAlias(object expression, SQLAlias alias)
-		{
-			_columnExpressions.Add(new SQLSourceAliasPair(expression, alias));
+			_columnExpressions.AddRange(expressions.Unwrap());
 			return this;
 		}
 
@@ -188,53 +173,10 @@ namespace YCQL
 		/// <returns>A reference to this instance after the table expressions has been added to the to from list</returns>
 		public SelectBuilder From(params object[] tableExpressions)
 		{
-			_fromTableExpressions.AddRange(tableExpressions);
-			return this;
-		}
+			if (tableExpressions == null)
+				return this;
 
-		/// <summary>
-		/// Adds an aliased table into the From list using implicit join
-		/// </summary>
-		/// <param name="table">Table to be added into the From list</param>
-		/// <param name="aliasName">Alias name of the table</param>
-		/// <returns>A reference to this instance after the table expressions has been added to the to from list</returns>
-		public SelectBuilder FromWithAlias(DBTable table, string aliasName)
-		{
-			return FromWithAlias(table, new SQLAlias(aliasName));
-		}
-
-		/// <summary>
-		/// Adds an aliased subquery into the From list using implicit join
-		/// </summary>
-		/// <param name="tableExpression">Table expression to be added into the From list</param>
-		/// <param name="aliasName">Alias name of the table</param>
-		/// <returns>A reference to this instance after the table expressions has been added to the to from list</returns>
-		public SelectBuilder FromWithAlias(SelectBuilder tableExpression, string aliasName)
-		{
-			return FromWithAlias(tableExpression, new SQLAlias(aliasName));
-		}
-
-		/// <summary>
-		/// Adds an aliased table into the From list using implicit join
-		/// </summary>
-		/// <param name="table">Table to be added into the From list</param>
-		/// <param name="alias">Alias for the table</param>
-		/// <returns>A reference to this instance after the table expressions has been added to the to from list</returns>
-		public SelectBuilder FromWithAlias(DBTable table, SQLAlias alias)
-		{
-			_fromTableExpressions.Add(new SQLSourceAliasPair(table, alias));
-			return this;
-		}
-
-		/// <summary>
-		/// Adds an aliased subquery into the From list using implicit join
-		/// </summary>
-		/// <param name="tableExpression">Table expression to be added into the From list</param>
-		/// <param name="alias">Alias for the table</param>
-		/// <returns>A reference to this instance after the table expressions has been added to the to from list</returns>
-		public SelectBuilder FromWithAlias(SelectBuilder tableExpression, SQLAlias alias)
-		{
-			_fromTableExpressions.Add(new SQLSourceAliasPair(tableExpression, alias));
+			_fromTableExpressions.AddRange(tableExpressions.Unwrap());
 			return this;
 		}
 
@@ -245,6 +187,20 @@ namespace YCQL
 		public SelectBuilder Distinct()
 		{
 			_isDistinct = true;
+			return this;
+		}
+
+#if YCQL_SQLSERVER
+		/// <summary>
+		/// Adds one table expressions into the From list with given table hints
+		/// </summary>
+		/// <param name="tableExpression">Table expression to be added to the From list</param>
+		/// <param name="tableHints">Table hints to be used for that table expression</param>
+		/// <returns></returns>
+		public SelectBuilder FromWith(object tableExpression, params SqlServerTableHint[] tableHints)
+		{
+			_indexSSHintDict.Add(_fromTableExpressions.Count, tableHints);
+			_fromTableExpressions.Add(tableExpression);
 			return this;
 		}
 
@@ -260,6 +216,50 @@ namespace YCQL
 		}
 
 		/// <summary>
+		/// Specifies the number of rows to skip, before starting to return rows from the query expression (for Sql Server)
+		/// </summary>
+		/// <param name="numRowsExpression">Number of rows to skip</param>
+		/// <returns></returns>
+		public SelectBuilder Offset(object numRowsExpression)
+		{
+			_offsetNumRows = numRowsExpression;
+			return this;
+		}
+
+		/// <summary>
+		/// Specifies the number of rows to skip, before starting to return rows from the query expression (for Sql Server)
+		/// </summary>
+		/// <param name="numRows">Number of rows to skip</param>
+		/// <returns></returns>
+		public SelectBuilder Offset(long numRows)
+		{
+			return Offset((object) numRows);
+		}
+
+		/// <summary>
+		/// Specifies the number of rows to return, after processing the OFFSET clause
+		/// </summary>
+		/// <param name="numRowsExpression">Number of rows to return</param>
+		/// <returns></returns>
+		public SelectBuilder FetchNext(object numRowsExpression)
+		{
+			_fetchNextNumRows = numRowsExpression;
+			return this;
+		}
+
+		/// <summary>
+		/// Specifies the number of rows to return, after processing the OFFSET clause
+		/// </summary>
+		/// <param name="numRows">Number of rows to return</param>
+		/// <returns></returns>
+		public SelectBuilder FetchNext(long numRows)
+		{
+			return FetchNext((object) numRows);
+		}
+#endif
+
+#if YCQL_MYSQL
+		/// <summary>
 		/// Limits the select result to only return top x rows (for MySql)
 		/// </summary>
 		/// <param name="rowCount">Number of rows starting from the beginning of the result to be returned</param>
@@ -270,7 +270,7 @@ namespace YCQL
 		}
 
 		/// <summary>
-		/// Limits the select result to only return a range of rows
+		/// Limits the select result to only return a range of rows (for MySql)
 		/// </summary>
 		/// <param name="begin">The number of rows return result should skip from the query result</param>
 		/// <param name="numRows">The number of rows to return</param>
@@ -282,6 +282,7 @@ namespace YCQL
 
 			return this;
 		}
+#endif
 
 		/// <summary>
 		/// Joins one or more tables
@@ -290,7 +291,33 @@ namespace YCQL
 		/// <returns>A reference to this instance after the join definitions has been added to the join list</returns>
 		public SelectBuilder Join(params JoinDefinition[] joinDefinitions)
 		{
-			_joinDefinitions.AddRange(joinDefinitions);
+			_joinDefinitions.AddRange(joinDefinitions.Unwrap<JoinDefinition>());
+			return this;
+		}
+
+		/// <summary>
+		/// Unions one or more queries
+		/// </summary>
+		/// <param name="queriesToUnion">Queries to be unioned</param>
+		/// <returns>A reference to this instance after the queries has been added to the union list</returns>
+		public SelectBuilder Union(params SelectBuilder[] queriesToUnion)
+		{
+			foreach (SelectBuilder sb in queriesToUnion.Unwrap<SelectBuilder>())
+				_unions.Add(new Tuple<bool, SelectBuilder>(false, sb));
+
+			return this;
+		}
+
+		/// <summary>
+		/// Union All one or more queries
+		/// </summary>
+		/// <param name="queriesToUnion">Queries to be unioned</param>
+		/// <returns>A reference to this instance after the queries has been added to the union list</returns>
+		public SelectBuilder UnionAll(params SelectBuilder[] queriesToUnion)
+		{
+			foreach (SelectBuilder sb in queriesToUnion.Unwrap<SelectBuilder>())
+				_unions.Add(new Tuple<bool, SelectBuilder>(true, sb));
+
 			return this;
 		}
 
@@ -372,7 +399,10 @@ namespace YCQL
 		/// <returns>A reference to this instance after the expressions has been added to group by list</returns>
 		public SelectBuilder GroupBy(params object[] expressions)
 		{
-			_groupByExpressions.AddRange(expressions);
+			if (expressions == null)
+				return this;
+
+			_groupByExpressions.AddRange(expressions.Unwrap());
 			return this;
 		}
 
@@ -448,9 +478,21 @@ namespace YCQL
 		}
 
 		/// <summary>
-		/// Adds one or more expressions into the order by clause
+		/// Adds an expression into the order by clause using given order
 		/// </summary>
-		/// <param name="expressions">Expressions to be added into the order by clause</param>
+		/// <param name="expression">Expression to be added into the order by clause</param>
+		/// <param name="order">Order to be used</param>
+		/// <returns>A reference to this instance after the expressions has been added to order by list</returns>
+		public SelectBuilder OrderBy(object expression, Order order)
+		{
+			_indexOrderDict[_orderByExpressions.Count] = order;
+			return OrderBy(expression);
+		}
+
+		/// <summary>
+		/// Adds one or more expressions into the order by clause using default order
+		/// </summary>
+		/// <param name="expressions">Expression to be added into the order by clause</param>
 		/// <returns>A reference to this instance after the expressions has been added to order by list</returns>
 		public SelectBuilder OrderBy(params object[] expressions)
 		{
@@ -459,66 +501,103 @@ namespace YCQL
 		}
 
 		/// <summary>
-		/// Orders the return result with the specified order
-		/// </summary>
-		/// <param name="order">Order of the result should be ordered</param>
-		/// <returns>A reference to this instance after the new order has been set</returns>
-		public SelectBuilder Order(Order order)
-		{
-			_order = order;
-			return this;
-		}
-
-		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("SELECT");
 			if (_isDistinct)
 				sb.Append(" DISTINCT");
 
-			if (_topRows >= 0 && dbHelper.DBEngine == DBEngine.SQLServer)
+#if YCQL_SQLSERVER
+			if (_topRows >= 0 && dbHelper.DbEngine == DbEngine.SqlServer)
 				sb.AppendFormat(" TOP {0}", _topRows);
+#endif
 
-			sb.AppendFormat(" {0}", dbHelper.TranslateObjectsToSQLString(_columnExpressions, parameterCollection));
+			sb.AppendFormat(" {0}", dbHelper.TranslateObjectsToSqlString(_columnExpressions, parameterCollection));
 
 			if (_fromTableExpressions.Count > 0)
-				sb.AppendFormat(" FROM {0}", dbHelper.TranslateObjectsToSQLString(_fromTableExpressions, parameterCollection));
+			{
+				sb.Append(" FROM ");
+				for (int i = 0; i < _fromTableExpressions.Count; i++)
+				{
+					sb.Append(dbHelper.TranslateObjectToSqlString(_fromTableExpressions[i], parameterCollection));
+#if YCQL_SQLSERVER
+					if (_indexSSHintDict.ContainsKey(i))
+						sb.AppendFormat(" WITH ({0})", dbHelper.TranslateObjectsToSqlString(_indexSSHintDict[i], parameterCollection));
+#endif
+					if (i != _fromTableExpressions.Count - 1)
+						sb.Append(", ");
+				}
+			}
 			sb.AppendLine();
 
 			foreach (JoinDefinition jd in _joinDefinitions)
-				sb.AppendLine(jd.ToSQL(dbHelper, parameterCollection));
+				sb.AppendLine(jd.ToSql(dbVersion, parameterCollection));
 
 			if (!_whereClause.IsNullOrEmpty())
-				sb.AppendFormat(" WHERE {0}", dbHelper.TranslateObjectToSQLString(_whereClause, parameterCollection));
+				sb.AppendFormat(" WHERE {0}", dbHelper.TranslateObjectToSqlString(_whereClause, parameterCollection));
 
 			if (_groupByExpressions.Count > 0)
-				sb.AppendFormat(" GROUP BY {0}", string.Join(",", dbHelper.TranslateObjectsToSQLString(_groupByExpressions, parameterCollection)));
+				sb.AppendFormat(" GROUP BY {0}", string.Join(",", dbHelper.TranslateObjectsToSqlString(_groupByExpressions, parameterCollection)));
 
 			if (!_havingClause.IsNullOrEmpty())
-				sb.AppendFormat(" HAVING {0}", dbHelper.TranslateObjectToSQLString(_havingClause, parameterCollection));
+				sb.AppendFormat(" HAVING {0}", dbHelper.TranslateObjectToSqlString(_havingClause, parameterCollection));
+
+			foreach (Tuple<bool, SelectBuilder> union in _unions)
+			{
+				sb.AppendLine();
+				sb.Append("UNION ");
+				if (union.Item1)
+					sb.Append("ALL ");
+				sb.AppendLine("(");
+				sb.Append(union.Item2.ToSql(dbVersion, parameterCollection));
+				sb.Append(")");
+			}
 
 			if (_orderByExpressions.Count > 0)
 			{
-				sb.AppendFormat(" ORDER BY {0}", string.Join(",", dbHelper.TranslateObjectsToSQLString(_orderByExpressions, parameterCollection)));
+				List<string> orderByStrings = new List<string>();
+				for (int i = 0; i < _orderByExpressions.Count; i++)
+				{
+					string orderByString = dbHelper.TranslateObjectToSqlString(_orderByExpressions[i], parameterCollection);
 
-				if (_order != YCQL.Order.Unspecified)
-					sb.Append(" " + _order.ToString());
+					if(_indexOrderDict.ContainsKey(i))
+					{
+						Order order = _indexOrderDict[i];
+						if (order != Order.Unspecified)
+							orderByString += " " + order.ToString();
+					}
+
+					orderByStrings.Add(orderByString);
+				}
+
+				sb.AppendFormat(" ORDER BY {0}", string.Join(",", orderByStrings));
+
+#if YCQL_SQLSERVER
+				if (_offsetNumRows != null)
+					sb.AppendFormat(" OFFSET {0} ROWS", dbHelper.TranslateObjectToSqlString(_offsetNumRows, parameterCollection));
+
+				if (_fetchNextNumRows != null)
+					sb.AppendFormat(" FETCH NEXT {0} ROWS ONLY", dbHelper.TranslateObjectToSqlString(_fetchNextNumRows, parameterCollection));
+#endif
 			}
 
-			if (dbHelper.DBEngine == DBEngine.MySQL)
+#if YCQL_MYSQL
+			if (dbHelper.DbEngine == DbEngine.MySql)
 			{
 				if (_limitStart >= 0)
 					sb.AppendFormat(" LIMIT {0}, {1}", _limitStart, _limitRowCount);
 				else if (_limitRowCount > 0)
 					sb.AppendFormat(" LIMIT {0}", _limitRowCount);
 			}
-
+#endif
 			return sb.ToString();
 		}
 	}

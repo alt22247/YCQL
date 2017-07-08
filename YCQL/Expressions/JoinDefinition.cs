@@ -5,16 +5,16 @@
 
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Enum list of all supported type of joins
 	/// </summary>
-	/// <seealso cref="YCQL.JoinDefinition"/>
+	/// <seealso cref="Ycql.JoinDefinition"/>
 	public enum JoinType
 	{
 		/// <summary>
@@ -42,10 +42,10 @@ namespace YCQL
 	/// <summary>
 	/// Represents a single table join in a Sql statement
 	/// </summary>
-	/// <seealso cref="YCQL.JoinType"/>
-	/// <seealso cref="YCQL.SelectBuilder"/>
-	/// <seealso cref="YCQL.UpdateBuilder"/>
-	public class JoinDefinition : ITranslateSQL, ISupportOn<JoinDefinition>
+	/// <seealso cref="Ycql.JoinType"/>
+	/// <seealso cref="Ycql.SelectBuilder"/>
+	/// <seealso cref="Ycql.UpdateBuilder"/>
+	public class JoinDefinition : ITranslateSql, ISupportOn<JoinDefinition>
 	{
 		object _tableExpression;
 		JoinType _type;
@@ -56,8 +56,8 @@ namespace YCQL
 		/// </summary>
 		/// <param name="type">Type of join</param>
 		/// <param name="table">The table to be joined</param>
-		public JoinDefinition(JoinType type, DBTable table)
-			: this(type, (object) table, null)
+		public JoinDefinition(JoinType type, DbTable table)
+			: this(type, (object) table, (string) null)
 		{
 		}
 
@@ -65,9 +65,9 @@ namespace YCQL
 		/// Initializes a new instance of the JoinDefinition class using specified join type and a subquery to be joined
 		/// </summary>
 		/// <param name="type">Type of join</param>
-		/// <param name="tableExpression">The subquery to be joined</param>
-		public JoinDefinition(JoinType type, SelectBuilder tableExpression)
-			: this(type, (object) tableExpression, null)
+		/// <param name="subQuery">The subquery to be joined</param>
+		public JoinDefinition(JoinType type, SelectBuilder subQuery)
+			: this(type, (object) subQuery, (string) null)
 		{
 		}
 
@@ -77,8 +77,8 @@ namespace YCQL
 		/// <param name="type">Type of join</param>
 		/// <param name="table">The table to be joined</param>
 		/// <param name="tableAliasName">Alias name for the table to be joined</param>
-		public JoinDefinition(JoinType type, DBTable table, string tableAliasName)
-			: this(type, table, new SQLAlias(tableAliasName))
+		public JoinDefinition(JoinType type, DbTable table, string tableAliasName)
+			: this(type, table, new SqlAlias(tableAliasName))
 		{
 		}
 
@@ -86,10 +86,10 @@ namespace YCQL
 		/// Initializes a new instance of the JoinDefinition class using specified join type and an aliased subquery to be joined
 		/// </summary>
 		/// <param name="type">Type of join</param>
-		/// <param name="tableExpression">The subquery to be joined</param>
+		/// <param name="subQuery">The subquery to be joined</param>
 		/// <param name="tableAliasName">Alias name for the subquery to be joined</param>
-		public JoinDefinition(JoinType type, SelectBuilder tableExpression, string tableAliasName)
-			: this(type, tableExpression, new SQLAlias(tableAliasName))
+		public JoinDefinition(JoinType type, SelectBuilder subQuery, string tableAliasName)
+			: this(type, subQuery, new SqlAlias(tableAliasName))
 		{
 		}
 
@@ -99,7 +99,7 @@ namespace YCQL
 		/// <param name="type">Type of join</param>
 		/// <param name="table">The table to be joined</param>
 		/// <param name="tableAlias">Alias for the table to be joined</param>
-		public JoinDefinition(JoinType type, DBTable table, SQLAlias tableAlias)
+		public JoinDefinition(JoinType type, DbTable table, SqlAlias tableAlias)
 			: this(type, (object) table, tableAlias)
 		{
 		}
@@ -108,10 +108,10 @@ namespace YCQL
 		/// Initializes a new instance of the JoinDefinition class using specified join type and an aliased subquery to be joined
 		/// </summary>
 		/// <param name="type">Type of join</param>
-		/// <param name="tableExpression">The subquery to be joined</param>
+		/// <param name="subQuery">The subquery to be joined</param>
 		/// <param name="tableAlias">Alias for the subquery to be joined</param>
-		public JoinDefinition(JoinType type, SelectBuilder tableExpression, SQLAlias tableAlias)
-			: this(type, (object) tableExpression, tableAlias)
+		public JoinDefinition(JoinType type, SelectBuilder subQuery, SqlAlias tableAlias)
+			: this(type, (object) subQuery, tableAlias)
 		{
 		}
 
@@ -121,9 +121,21 @@ namespace YCQL
 		/// <param name="type">Type of join</param>
 		/// <param name="tableExpression">The table expression to be joined</param>
 		/// <param name="tableAlias">Alias for the table expression to be joined</param>
-		public JoinDefinition(JoinType type, object tableExpression, SQLAlias tableAlias)
+		public JoinDefinition(JoinType type, object tableExpression, SqlAlias tableAlias)
 		{
-			_tableExpression = tableAlias == null ? tableExpression : new SQLSourceAliasPair(tableExpression, tableAlias);
+			_tableExpression = tableAlias == null ? tableExpression : new SqlSourceAliasPair(tableExpression, tableAlias);
+			_type = type;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the JoinDefinition class using specified join type and an aliased table expression to be joined
+		/// </summary>
+		/// <param name="type">Type of join</param>
+		/// <param name="tableExpression">The table expression to be joined</param>
+		/// <param name="tableAlias">Alias for the table expression to be joined</param>
+		public JoinDefinition(JoinType type, object tableExpression, string tableAlias)
+		{
+			_tableExpression = string.IsNullOrEmpty(tableAlias) ? tableExpression : new SqlSourceAliasPair(tableExpression, tableAlias);
 			_type = type;
 		}
 
@@ -201,16 +213,18 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
-			sb.AppendFormat("{0} JOIN {1}", _type.ToString().ToUpper(), dbHelper.TranslateObjectToSQLString(_tableExpression, parameterCollection));
+			sb.AppendFormat("{0} JOIN {1}", _type.ToString().ToUpper(), dbHelper.TranslateObjectToSqlString(_tableExpression, parameterCollection));
 
 			if (!_onClause.IsNullOrEmpty())
-				sb.AppendFormat(" ON {0}", dbHelper.TranslateObjectToSQLString(_onClause, parameterCollection));
+				sb.AppendFormat(" ON {0}", dbHelper.TranslateObjectToSqlString(_onClause, parameterCollection));
 
 			return sb.ToString();
 		}

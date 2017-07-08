@@ -7,22 +7,23 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents a Sql builder for insert operation
 	/// </summary>
-	/// <seealso cref="YCQL.CreateBuilder"/>
-	/// <seealso cref="YCQL.DeleteBuilder"/>
-	/// <seealso cref="YCQL.AlterBuilder"/>
-	/// <seealso cref="YCQL.SelectBuilder"/>
-	/// <seealso cref="YCQL.UpdateBuilder"/>
-	/// <seealso cref="YCQL.DBTable"/>
-	/// <seealso cref="YCQL.DBColumn"/>
-	public class InsertBuilder : ISQLBuilder
+	/// <seealso cref="Ycql.CreateBuilder"/>
+	/// <seealso cref="Ycql.DeleteBuilder"/>
+	/// <seealso cref="Ycql.AlterBuilder"/>
+	/// <seealso cref="Ycql.SelectBuilder"/>
+	/// <seealso cref="Ycql.UpdateBuilder"/>
+	/// <seealso cref="Ycql.DbTable"/>
+	/// <seealso cref="Ycql.DbColumn"/>
+	public class InsertBuilder : ISqlBuilder
 	{
 		/// <summary>
 		/// List of objects to be inserted
@@ -31,27 +32,57 @@ namespace YCQL
 		/// <summary>
 		/// List of columns to have values inserted
 		/// </summary>
-		List<DBColumn> _insertColumns;
+		List<DbColumn> _insertColumns;
+#if YCQL_SQLSERVER
 		/// <summary>
 		/// List of columns to be outputed after insert (for Sql Server)
 		/// </summary>
-		List<DBColumn> _outputInsertedColumns;
+		List<object> _outputExpressions;
+		/// <summary>
+		/// Table to be outputed into for OUTPUT statement (for Sql Server)
+		/// </summary>
+		object _outputIntoTableExpression;
+#endif
 		/// <summary>
 		/// Table which new rows should be inserted into
 		/// </summary>
-		DBTable _table;
+		object _tableExpression;
+
+		object _subQuery;
 
 		/// <summary>
 		/// Initializes a new instance of the InsertBuilder class using specified table
 		/// </summary>
 		/// <param name="table">The corresponding DBTable instance for the INSERT operation</param>
-		public InsertBuilder(DBTable table)
+		public InsertBuilder(DbTable table)
+			: this((object) table)
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the InsertBuilder class using specified table expression
+		/// </summary>
+		/// <param name="tableExpression">The table expression for the INSERT operation</param>
+		public InsertBuilder(object tableExpression)
 		{
 			_insertValues = new List<object>();
-			_insertColumns = new List<DBColumn>();
-			_outputInsertedColumns = new List<DBColumn>();
+			_insertColumns = new List<DbColumn>();
+#if YCQL_SQLSERVER
+			_outputExpressions = new List<object>();
+#endif
 
-			_table = table;
+			_tableExpression = tableExpression;
+		}
+
+		/// <summary>
+		/// Sets the subquery to use for the INSERT operation
+		/// </summary>
+		/// <param name="subQuery">the subquery to use</param>
+		/// <returns></returns>
+		public InsertBuilder SubQuery(object subQuery)
+		{
+			_subQuery = subQuery;
+			return this;
 		}
 
 		/// <summary>
@@ -60,7 +91,7 @@ namespace YCQL
 		/// <param name="column">Column associated with the new value to be inserted</param>
 		/// <param name="value">Value to be inserted</param>
 		/// <returns>A reference to this instance after column value pair has been added to the to insert list</returns>
-		public InsertBuilder AddPair(DBColumn column, object value)
+		public InsertBuilder AddPair(DbColumn column, object value)
 		{
 			_insertColumns.Add(column);
 			_insertValues.Add(value);
@@ -68,38 +99,78 @@ namespace YCQL
 		}
 
 		/// <summary>
+		/// Adds specified columns into the insert column list
+		/// </summary>
+		/// <param name="columns">Columns to be added for insert</param>
+		/// <returns>A reference to this instance after column value pair has been added to the to insert list</returns>
+		public InsertBuilder AddColumns(params DbColumn[] columns)
+		{
+			_insertColumns.AddRange(columns);
+			return this;
+		}
+
+#if YCQL_SQLSERVER
+		/// <summary>
 		/// Ouputs the specified columns after insert (for Sql Server)
 		/// </summary>
-		/// <param name="columns">Columns to be outputed</param>
+		/// <param name="expressions">expressions to be outputed, DBColumn will be outputed as INSERTED.{ColumnName} (for Sql Server)</param>
 		/// <returns>A reference to this instance after the columns have been added to the to output list</returns>
-		public InsertBuilder OutputInserted(params DBColumn[] columns)
+		public InsertBuilder Output(params object[] expressions)
 		{
-			_outputInsertedColumns.AddRange(columns);
+			if (expressions == null)
+				return this;
+
+			foreach (object expression in expressions.Unwrap())
+				_outputExpressions.Add(expression is DbColumn ? ((DbColumn) expression).ToInsertedColumn() : expression);
+
 			return this;
 		}
 
 		/// <summary>
+		/// Sets the table to be used for OUTPUT INTO statement (for Sql Server)
+		/// </summary>
+		/// <param name="tableExpression">Table to be output into</param>
+		/// <returns></returns>
+		public InsertBuilder OutputInto(object tableExpression)
+		{
+			_outputIntoTableExpression = tableExpression;
+			return this;
+		}
+#endif
+
+		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
-			StringBuilder sb = new StringBuilder();
-			sb.Append("INSERT INTO ");
-			sb.Append(dbHelper.QuoteIdentifier(_table.Name));
-			if (_insertColumns.Count > 0)
-				sb.AppendFormat("({0})", string.Join(",", _insertColumns.Select(column => column.ToSQL(dbHelper, parameterCollection))));
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
 
-			if (_outputInsertedColumns.Count > 0 && dbHelper.DBEngine == DBEngine.SQLServer)
+			StringBuilder sb = new StringBuilder();
+			sb.AppendFormat("INSERT INTO {0} ", dbHelper.TranslateObjectToSqlString(_tableExpression, parameterCollection));
+			if (_insertColumns.Count > 0)
+				sb.AppendFormat("({0})", string.Join(",", _insertColumns.Select(column => column.ToSql(dbVersion, parameterCollection))));
+
+			if (_subQuery != null)
+				sb.Append(dbHelper.TranslateObjectToSqlString(_subQuery, parameterCollection));
+
+#if YCQL_SQLSERVER
+			if (_outputExpressions.Count > 0 && dbHelper.DbEngine == DbEngine.SqlServer)
 			{
 				sb.Append(" OUTPUT ");
-				sb.AppendLine(string.Join(", ", _outputInsertedColumns.Select(x =>
-					string.Format("{0}.{1}", dbHelper.QuoteIdentifier("INSERTED"), dbHelper.QuoteIdentifier(x.Name)))));
-			}
+				sb.Append(dbHelper.TranslateObjectsToSqlString(_outputExpressions, parameterCollection));
 
-			sb.AppendFormat(" VALUES ({0})", dbHelper.TranslateObjectsToSQLString(_insertValues, parameterCollection));
+				if (_outputIntoTableExpression != null)
+					sb.Append(" INTO " + dbHelper.TranslateObjectToSqlString(_outputIntoTableExpression, parameterCollection));
+
+				sb.AppendLine();
+			}
+#endif
+
+			if (_insertValues.Count > 0)
+				sb.AppendFormat(" VALUES ({0})", dbHelper.TranslateObjectsToSqlString(_insertValues, parameterCollection));
 
 			return sb.ToString();
 		}

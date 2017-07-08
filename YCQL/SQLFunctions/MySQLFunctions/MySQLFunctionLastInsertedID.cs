@@ -3,19 +3,19 @@
  * All rights reserved
 */
 
-using YCQL.SQLFunctions;
+using Ycql.SqlFunctions;
 
-namespace YCQL.MySQLFunctions
+namespace Ycql.MySqlFunctions
 {
 	/// <summary>
 	/// Represents LAST_INSERT_ID function in MySql which returns the most recently generated ID in the server on a per-connection basis
 	/// </summary>
-	public class MySQLFunctionLastInsertedID : SQLFunctionBase
+	public class MySqlFunctionLastInsertedID : SqlFunctionBase
 	{
 		/// <summary>
-		/// Initializes a new instance of the MySQLFunctionLastInsertedID class
+		/// Initializes a new instance of the MySqlFunctionLastInsertedID class
 		/// </summary>
-		public MySQLFunctionLastInsertedID()
+		public MySqlFunctionLastInsertedID()
 			: base("LAST_INSERT_ID")
 		{
 		}

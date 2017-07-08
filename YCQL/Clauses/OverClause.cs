@@ -3,19 +3,21 @@
  * All rights reserved
 */
 
+#if YCQL_SQLSERVER
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents an over clause in Sql (for Sql Server)
 	/// </summary>
-	/// <seealso cref="YCQL.DBColumn"/>
-	public class OverClause : ITranslateSQL
+	/// <seealso cref="Ycql.DbColumn"/>
+	public class OverClause : ITranslateSql
 	{
 		/// <summary>
 		/// Left hand side value of the clause
@@ -38,7 +40,7 @@ namespace YCQL
 		/// Initializes a new instance of the OverClause class using specified column
 		/// </summary>
 		/// <param name="column">Column to be used for the over clause</param>
-		public OverClause(DBColumn column)
+		public OverClause(DbColumn column)
 			: this((object) column)
 		{
 		}
@@ -63,7 +65,10 @@ namespace YCQL
 		/// <returns>A reference to this instance after the expressions have been added to the partition by list</returns>
 		public OverClause PartitionBy(params object[] expressions)
 		{
-			_partitionByExpressions.AddRange(expressions);
+			if (expressions == null)
+				return this;
+
+			_partitionByExpressions.AddRange(expressions.Unwrap());
 			return this;
 		}
 
@@ -74,7 +79,10 @@ namespace YCQL
 		/// <returns>A reference to this instance after the expressions have been added to the order by list</returns>
 		public OverClause OrderBy(params object[] expressions)
 		{
-			_orderByExpressions.AddRange(expressions);
+			if (expressions == null)
+				return this;
+
+			_orderByExpressions.AddRange(expressions.Unwrap());
 			return this;
 		}
 
@@ -92,21 +100,23 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
-			sb.AppendFormat("{0} OVER (", dbHelper.TranslateObjectToSQLString(_lhs, parameterCollection));
+			sb.AppendFormat("{0} OVER (", dbHelper.TranslateObjectToSqlString(_lhs, parameterCollection));
 			if (_partitionByExpressions.Count > 0)
 			{
-				sb.AppendFormat(" PARTITION BY {0}", dbHelper.TranslateObjectsToSQLString(_partitionByExpressions, parameterCollection));
+				sb.AppendFormat(" PARTITION BY {0}", dbHelper.TranslateObjectsToSqlString(_partitionByExpressions, parameterCollection));
 			}
 
 			if (_orderByExpressions.Count > 0)
 			{
-				sb.AppendFormat(" ORDER BY {0}", dbHelper.TranslateObjectsToSQLString(_orderByExpressions, parameterCollection));
+				sb.AppendFormat(" ORDER BY {0}", dbHelper.TranslateObjectsToSqlString(_orderByExpressions, parameterCollection));
 
 				if (_order != 0)
 					sb.AppendFormat(" {0}", _order);
@@ -116,3 +126,4 @@ namespace YCQL
 		}
 	}
 }
+#endif

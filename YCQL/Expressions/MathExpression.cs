@@ -7,23 +7,23 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
-using YCQL.DBHelpers;
-using YCQL.Extensions;
-using YCQL.Interfaces;
-using YCQL;
+using Ycql.DbHelpers;
+using Ycql.Extensions;
+using Ycql.Interfaces;
+using Ycql;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents one or more expressions which will be connected with math operator
 	/// </summary>
-	/// <seealso cref="YCQL.MathOperator"/>
-	/// <seealso cref="YCQL.BooleanExpression"/>
-	/// <seealso cref="YCQL.AllOperator"/>
-	/// <seealso cref="YCQL.AnyOperator"/>
-	/// <seealso cref="YCQL.ExistsOperator"/>
-	/// <seealso cref="YCQL.InOperator"/>
-	public class MathExpression : ITranslateSQL
+	/// <seealso cref="Ycql.MathOperator"/>
+	/// <seealso cref="Ycql.BooleanExpression"/>
+	/// <seealso cref="Ycql.AllOperator"/>
+	/// <seealso cref="Ycql.AnyOperator"/>
+	/// <seealso cref="Ycql.ExistsOperator"/>
+	/// <seealso cref="Ycql.InOperator"/>
+	public class MathExpression : ITranslateSql
 	{
 		object _initialElement;
 		List<Tuple<MathOperator, object>> _terms;
@@ -31,7 +31,7 @@ namespace YCQL
 		/// Initializes a new instance of the MathExpression class using specified column as initial term
 		/// </summary>
 		/// <param name="initialElement">The left most term of this expression</param>
-		public MathExpression(DBColumn initialElement)
+		public MathExpression(DbColumn initialElement)
 			: this((object) initialElement)
 		{
 		}
@@ -105,17 +105,19 @@ namespace YCQL
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			sb.Append("(");
-			sb.Append(dbHelper.TranslateObjectToSQLString(_initialElement, parameterCollection));
+			sb.Append(dbHelper.TranslateObjectToSqlString(_initialElement, parameterCollection));
 
 			foreach (Tuple<MathOperator, object> term in _terms)
-				sb.AppendFormat(" {0} {1}", term.Item1.ToSQL(), dbHelper.TranslateObjectToSQLString(term.Item2, parameterCollection));
+				sb.AppendFormat(" {0} {1}", term.Item1.ToSql(), dbHelper.TranslateObjectToSqlString(term.Item2, parameterCollection));
 
 			sb.Append(")");
 

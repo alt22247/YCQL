@@ -3,7 +3,7 @@
  * All rights reserved
 */
 
-namespace YCQL.Interfaces
+namespace Ycql.Interfaces
 {
 	/// <summary>
 	/// Indicates that the Sql statement associated with the class supports Distinct keyword

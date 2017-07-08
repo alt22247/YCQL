@@ -3,26 +3,26 @@
  * All rights reserved
 */
 
-using YCQL.DBHelpers;
+using Ycql.DbHelpers;
 using System.Data.Common;
 using System.Text;
 
-namespace YCQL.Constraints
+namespace Ycql.Constraints
 {
 	/// <summary>
 	/// Represents the Unique Key constraint in SQL
 	/// </summary>
-	/// <seealso cref="YCQL.Attributes.UniqueKeyAttribute"/>
-	/// <seealso cref="YCQL.Constraints.CheckConstraint"/>
-	/// <seealso cref="YCQL.Constraints.ForeignKeyConstraint"/>
-	/// <seealso cref="YCQL.Constraints.PrimaryKeyConstraint"/>
-	public class UniqueKeyConstraint : SQLConstraint
+	/// <seealso cref="Ycql.Attributes.UniqueKeyAttribute"/>
+	/// <seealso cref="Ycql.Constraints.CheckConstraint"/>
+	/// <seealso cref="Ycql.Constraints.ForeignKeyConstraint"/>
+	/// <seealso cref="Ycql.Constraints.PrimaryKeyConstraint"/>
+	public class UniqueKeyConstraint : SqlConstraint
 	{
 		/// <summary>
 		/// Initializes a new instance of the UniqueKeyConstraint class using specified column
 		/// </summary>
 		/// <param name="column">The column associated with this unique key constraint</param>
-		public UniqueKeyConstraint(DBColumn column)
+		public UniqueKeyConstraint(DbColumn column)
 			: this(null, column)
 		{
 		}
@@ -32,7 +32,7 @@ namespace YCQL.Constraints
 		/// </summary>
 		/// <param name="name">The name for this unique key constraint</param>
 		/// <param name="column">The column associated with this unique key constraint</param>
-		public UniqueKeyConstraint(string name, DBColumn column)
+		public UniqueKeyConstraint(string name, DbColumn column)
 			: base(name)
 		{
 			Name = name;
@@ -42,21 +42,23 @@ namespace YCQL.Constraints
 		/// <summary>
 		/// Gets or sets the column associated with this unique key constraint
 		/// </summary>
-		public DBColumn Column { get; set; }
+		public DbColumn Column { get; set; }
 
 		/// <summary>
 		/// Transforms current object into a parameterized Sql statement where parameter objects are added into parameterCollection
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">The collection which will hold all the parameters for the sql query</param>
 		/// <returns>Parameterized Sql string</returns>
-		public override string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public override string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			StringBuilder sb = new StringBuilder();
 			if (!string.IsNullOrEmpty(Name))
 				sb.AppendFormat("CONSTRAINT {0} ", dbHelper.QuoteIdentifier(Name));
 
-			sb.AppendFormat("UNIQUE ({0})", dbHelper.QuoteIdentifier(Column.Name));
+			sb.AppendFormat("UNIQUE ({0})", dbHelper.QuoteIdentifier(Column.ColumnName));
 
 			return sb.ToString();
 		}

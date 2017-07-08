@@ -5,21 +5,21 @@
 
 using System;
 using System.Data.Common;
-using YCQL.DBHelpers;
-using YCQL.Interfaces;
+using Ycql.DbHelpers;
+using Ycql.Interfaces;
 
-namespace YCQL
+namespace Ycql
 {
 	/// <summary>
 	/// Represents a Sql alias
 	/// </summary>
-	public class SQLAlias : ITranslateSQL
+	public class SqlAlias : ITranslateSql
 	{
 		/// <summary>
 		/// Initializes a new instance of the SQLSourceAlias class using specified alias string
 		/// </summary>
 		/// <param name="aliasName">The sql alias name</param>
-		public SQLAlias(string aliasName)
+		public SqlAlias(string aliasName)
 		{
 			if (string.IsNullOrEmpty(aliasName))
 				throw new ArgumentNullException("aliasName");
@@ -35,11 +35,13 @@ namespace YCQL
 		/// <summary>
 		/// Returns an Sql escaped alias name
 		/// </summary>
-		/// <param name="dbHelper">The corresponding DBHelper instance to which DBMS's sql query you want to produce</param>
+		/// <param name="dbVersion">The corresponding DBMS enum which the outputed query is for</param>
 		/// <param name="parameterCollection">Not used</param>
 		/// <returns>Parameterized Sql string</returns>
-		public string ToSQL(DBHelper dbHelper, DbParameterCollection parameterCollection)
+		public string ToSql(DbVersion dbVersion, DbParameterCollection parameterCollection)
 		{
+			DbHelper dbHelper = DbHelper.GetDbHelper(dbVersion);
+
 			return dbHelper.QuoteIdentifier(AliasName);
 		}
 
